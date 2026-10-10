@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>김경원 ♥ 최규로 결혼합니다</title>
 <meta name="description" content="2027년 1월 23일 토요일 오후 6시, 웨스틴 조선 서울 1층 그랜드볼룸">
 <meta name="robots" content="noindex, nofollow">
@@ -22,7 +22,6 @@
 
 <!-- ───────── 봉투 인트로 ───────── -->
 <div id="envelope" class="envelope" role="button" tabindex="0" aria-label="청첩장 열기">
-  <div class="env-notch"></div>
   <div class="env-inner">
     <p class="env-small">THE WEDDING OF</p>
     <h1 class="env-names"><span data-bind="groomEn">KYUNGWON</span><br>&amp; <span data-bind="brideEn">KYURO</span></h1>
@@ -74,12 +73,9 @@
   <!-- 갤러리 -->
   <section class="section reveal" id="gallerySec" hidden>
     <p class="label">GALLERY</p>
+    <div class="g-thumbs" id="gThumbs" role="tablist" aria-label="사진 선택"></div>
     <div class="gallery" id="gallery"></div>
-    <div class="g-ctrl">
-      <button class="g-arrow" id="gPrev" aria-label="이전 사진">‹</button>
-      <div class="g-dots" id="gDots"></div>
-      <button class="g-arrow" id="gNext" aria-label="다음 사진">›</button>
-    </div>
+    <p class="g-count"><span id="gCur">1</span> / <span id="gTotal"></span></p>
   </section>
 
   <!-- 오시는 길 -->

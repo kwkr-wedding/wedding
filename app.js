@@ -91,26 +91,28 @@
     a.download = "wedding.ics"; a.click();
   };
 
-  /* ---------- gallery (swipe, 확대 없음) ---------- */
-  const G = (C.gallery || []).map(f => /^https?:|\//.test(f) ? f : `assets/gallery/${f}`);
+  /* ---------- gallery (썸네일 + 큰 사진, 사진 확대 없음) ---------- */
+  const isUrl = f => /^https?:|\//.test(f);
+  const G = (C.gallery || []).map(f => ({ full: isUrl(f) ? f : `assets/gallery/${f}`, thumb: isUrl(f) ? f : `assets/gallery/thumb/${f}` }));
   if (G.length) {
     $("#gallerySec").hidden = false;
-    const track = $("#gallery");
-    track.innerHTML = G.map((s, i) => `<div class="g-slide"><img src="${esc(s)}" alt="사진 ${i + 1}" ${i ? 'loading="lazy"' : ""} draggable="false"></div>`).join("");
-    $("#gDots").innerHTML = G.map((_, i) => `<span${i ? "" : ' class="on"'}></span>`).join("");
-    const go = i => track.scrollTo({ left: track.clientWidth * Math.max(0, Math.min(G.length - 1, i)), behavior: "smooth" });
-    const idx = () => Math.round(track.scrollLeft / track.clientWidth);
-    track.addEventListener("scroll", () => { const k = idx(); $$("#gDots span").forEach((d, j) => d.classList.toggle("on", j === k)); }, { passive: true });
-    $("#gPrev").onclick = () => go(idx() - 1);
-    $("#gNext").onclick = () => go(idx() + 1);
-    if (G.length < 2) $(".g-ctrl").hidden = true;
-    // 사진 길게 눌러 저장·우클릭·드래그 방지
-    track.addEventListener("contextmenu", e => e.preventDefault());
+    const track = $("#gallery"), thumbs = $("#gThumbs");
+    track.innerHTML = G.map((g, i) => `<div class="g-slide"><img src="${esc(g.full)}" alt="사진 ${i + 1}" ${i ? 'loading="lazy"' : ""} draggable="false"></div>`).join("");
+    thumbs.innerHTML = G.map((g, i) => `<button class="g-thumb${i ? "" : " on"}" role="tab" aria-selected="${!i}" aria-label="사진 ${i + 1}" data-i="${i}"><img src="${esc(g.thumb)}" alt="" draggable="false" onerror="this.onerror=null;this.src='${esc(g.full)}'"></button>`).join("");
+    $("#gTotal").textContent = G.length;
+    let cur = 0;
+    const select = k => {
+      if (k === cur) return; cur = k;
+      $$(".g-thumb", thumbs).forEach((t, j) => { t.classList.toggle("on", j === k); t.setAttribute("aria-selected", j === k); });
+      $("#gCur").textContent = k + 1;
+      const t = thumbs.children[k];
+      thumbs.scrollTo({ left: t.offsetLeft - (thumbs.clientWidth - t.offsetWidth) / 2, behavior: "smooth" });
+    };
+    track.addEventListener("scroll", () => select(Math.round(track.scrollLeft / track.clientWidth)), { passive: true });
+    thumbs.onclick = e => { const t = e.target.closest(".g-thumb"); if (!t) return; track.scrollTo({ left: track.clientWidth * +t.dataset.i, behavior: "smooth" }); };
+    // 사진 길게 눌러 저장·우클릭 방지
+    [track, thumbs].forEach(el => el.addEventListener("contextmenu", e => e.preventDefault()));
   }
-  // 핀치 확대 방지 (iOS Safari는 viewport 설정을 무시하므로 별도 처리)
-  document.addEventListener("gesturestart", e => e.preventDefault());
-  let lastTouch = 0;
-  document.addEventListener("touchend", e => { const n = Date.now(); if (n - lastTouch < 300 && !e.target.closest("button,a,input,textarea,label")) e.preventDefault(); lastTouch = n; }, { passive: false });
 
   /* ---------- location ---------- */
   const q = encodeURIComponent(C.venue.name);

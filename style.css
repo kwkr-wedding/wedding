@@ -33,7 +33,6 @@ main{max-width:440px;margin:0 auto;background:var(--paper);min-height:100vh;padd
   transition:transform 1.1s cubic-bezier(.7,0,.2,1),opacity 1.1s ease}
 .envelope.open{transform:translateY(-104%);opacity:.6}
 .envelope.gone{display:none}
-.env-notch{position:absolute;top:-70px;left:50%;width:140px;height:140px;margin-left:-70px;border-radius:50%;background:#f6f4ec;box-shadow:inset 0 -2px 6px rgba(0,0,0,.18)}
 .env-inner{text-align:center}
 .env-small{font-family:var(--caps);font-size:11px;letter-spacing:.32em;margin-bottom:22px;color:#3a392e;text-shadow:0 1px 0 rgba(255,255,255,.12),0 -1px 0 rgba(0,0,0,.25)}
 .env-names{font-family:var(--caps);font-weight:400;font-size:clamp(30px,9vw,40px);line-height:1.25;letter-spacing:.12em;color:#3a392e;
@@ -98,17 +97,25 @@ main{max-width:440px;margin:0 auto;background:var(--paper);min-height:100vh;padd
 .link-btn{font-size:11.5px;color:var(--olive);border-bottom:1px solid var(--olive-l);margin-left:6px;padding:0 1px}
 .plain{text-decoration:none}
 
-/* Gallery — 스와이프, 확대 없음 */
+/* Gallery — 썸네일 줄 + 큰 사진. 사진 영역은 핀치 확대 불가(touch-action), 글씨는 확대 가능 */
 #gallerySec{padding-left:0;padding-right:0}
-.gallery{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.g-thumbs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:6px 16px 14px;touch-action:pan-x}
+.g-thumbs::-webkit-scrollbar{display:none}
+.g-thumbs>:first-child{margin-left:auto}.g-thumbs>:last-child{margin-right:auto}
+.g-thumb{position:relative;flex:0 0 auto;width:calc((min(100vw,440px) - 32px - 48px) / 7);aspect-ratio:2/3;padding:2px;border-radius:4px;background:transparent;opacity:.5;transition:opacity .3s,transform .3s;overflow:hidden}
+.g-thumb img{width:100%;height:100%;object-fit:cover;display:block;border-radius:2px;pointer-events:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.g-thumb.on{opacity:1;transform:translateY(-2px);
+  background:linear-gradient(135deg,#fffdf4 0%,#d9d3b8 18%,#8f8b6a 38%,#f4f0de 52%,#a39f7f 70%,#efe9cf 86%,#fffdf4 100%);
+  box-shadow:0 0 0 .5px rgba(80,78,58,.35),0 4px 10px -3px rgba(70,68,48,.45),inset 0 1px 0 rgba(255,255,255,.9)}
+.g-thumb.on::after{content:"";position:absolute;inset:0;border-radius:4px;pointer-events:none;
+  background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.55) 45%,transparent 60%);background-size:250% 100%;animation:gloss 2.8s ease-in-out infinite}
+@keyframes gloss{0%{background-position:120% 0}60%,100%{background-position:-60% 0}}
+.gallery{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;touch-action:pan-x pan-y}
 .gallery::-webkit-scrollbar{display:none}
 .g-slide{flex:0 0 100%;scroll-snap-align:center;aspect-ratio:2/3;background:#e4e1d6}
 .g-slide img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-.g-ctrl{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:16px}
-.g-arrow{font-size:26px;line-height:1;color:var(--olive);padding:4px 10px}
-.g-dots{display:flex;gap:7px}
-.g-dots span{width:6px;height:6px;border-radius:50%;background:#cfcab9;transition:background .3s,transform .3s}
-.g-dots span.on{background:var(--olive);transform:scale(1.25)}
+.g-count{margin-top:12px;font-family:var(--serif-en);font-size:13px;letter-spacing:.2em;color:var(--sub)}
+@media (prefers-reduced-motion:reduce){.g-thumb.on::after{animation:none}}
 
 /* Map */
 .map{margin:20px -26px 0;height:240px;background:#e4e1d6}

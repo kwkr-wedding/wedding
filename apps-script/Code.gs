@@ -1,6 +1,6 @@
 /**
  * 모바일 청첩장 RSVP · 방명록 백엔드 (Google Apps Script, 스프레드시트에 연결된 스크립트)
- * - RSVP 탭: 같은 이름(공백 무시)으로 다시 회신하면 기존 줄을 최신 내용으로 덮어씀
+ * - RSVP 탭: 성함(공백 무시)과 신랑측/신부측이 모두 같으면 기존 줄을 최신 내용으로 덮어씀
  * - Guestbook 탭: 방명록 (D열 체크 시 화면에서 숨김)
  * 배포: 배포 → 새 배포 → 웹 앱 / 실행: 나 / 액세스: 모든 사용자
  */
@@ -8,6 +8,7 @@ const RSVP_SHEET = "RSVP";
 const GB_SHEET = "Guestbook";
 const RSVP_HEADER = ["최초 등록", "최종 수정", "구분", "참석여부", "성함", "연락처", "식사", "메모", "수정 횟수"];
 const GB_HEADER = ["시간", "이름", "메시지", "숨김(체크하면 비공개)"];
+const SIDE_COL = 3; // RSVP_HEADER 에서 "구분" 위치 (1부터)
 const NAME_COL = 5; // RSVP_HEADER 에서 "성함" 위치 (1부터)
 
 function sheet_(name, header) {
@@ -35,10 +36,11 @@ function upsertRsvp_(d) {
   const values = [clean_(d.side, 10), clean_(d.attend, 10), name, clean_(d.phone, 20), clean_(d.meal, 10), clean_(d.note, 200)];
   const last = sh.getLastRow();
   if (last > 1) {
-    const names = sh.getRange(2, NAME_COL, last - 1, 1).getValues();
-    // 가장 아래(가장 최근)에 있는 같은 이름 줄을 찾아 덮어씀
-    for (let i = names.length - 1; i >= 0; i--) {
-      if (key_(names[i][0]) === key_(name)) {
+    // 구분(3열)~성함(5열)을 함께 읽어, 성함과 신랑측/신부측이 모두 같은 가장 아래 줄을 덮어씀
+    const rows = sh.getRange(2, SIDE_COL, last - 1, NAME_COL - SIDE_COL + 1).getValues();
+    for (let i = rows.length - 1; i >= 0; i--) {
+      const r = rows[i];
+      if (key_(r[NAME_COL - SIDE_COL]) === key_(name) && key_(r[0]) === key_(values[0])) {
         const row = i + 2;
         const count = Number(sh.getRange(row, 9).getValue()) || 0;
         sh.getRange(row, 2, 1, 8).setValues([[now].concat(values).concat([count + 1])]);

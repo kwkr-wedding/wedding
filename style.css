@@ -50,12 +50,13 @@ main{max-width:440px;margin:0 auto;background:var(--paper);min-height:100vh;padd
 .rule{display:block;width:56px;height:1px;background:#3d3c34;margin:22px auto}
 .label{font-family:var(--caps);font-size:11px;letter-spacing:.38em;color:var(--olive);margin-bottom:18px}
 .greeting p{font-size:14px;line-height:1.9;color:#3b3a33;margin-bottom:8px;text-wrap:balance}
-.parents{margin-top:30px;display:grid;gap:8px;font-size:14px}
-.parents .row{display:grid;grid-template-columns:1fr auto 3.2em 4.2em;align-items:baseline;gap:6px;max-width:300px;margin:0 auto}
+.parents{margin-top:30px;display:grid;grid-template-columns:repeat(4,auto);justify-content:center;align-items:baseline;column-gap:clamp(4px,1.6vw,8px);row-gap:8px;font-size:clamp(12.5px,3.6vw,14px)}
+.parents .row{display:contents}
+.parents .row>span{white-space:nowrap}
 .parents .pn{text-align:right;color:#4a4940}
-.parents .of{font-size:12px;color:var(--sub)}
-.parents .rel{font-size:12.5px;color:var(--sub);text-align:center}
-.parents .me{font-size:16.5px;font-weight:700;letter-spacing:.06em;text-align:left}
+.parents .of{font-size:.86em;color:var(--sub)}
+.parents .rel{font-size:.9em;color:var(--sub);text-align:center;min-width:2.4em}
+.parents .me{font-size:1.18em;padding-left:.3em;font-weight:700;letter-spacing:.06em;text-align:left}
 .when{font-size:14.5px}
 .where{font-size:14px}
 .where.strong{font-size:16px;font-weight:700;margin-bottom:2px}

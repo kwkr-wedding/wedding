@@ -114,8 +114,23 @@
     $("#gNext").onclick = () => go(cur + 1);
     const arrows = () => { $("#gPrev").disabled = cur === 0; $("#gNext").disabled = cur === G.length - 1; };
     arrows(); track.addEventListener("scroll", arrows, { passive: true });
-    if (G.length < 2) $(".g-ctrl").querySelectorAll(".g-arrow").forEach(b => b.hidden = true);
+    if (G.length < 2) $$(".g-arrow").forEach(b => b.hidden = true);
     thumbs.onclick = e => { const t = e.target.closest(".g-thumb"); if (!t) return; track.scrollTo({ left: track.clientWidth * +t.dataset.i, behavior: "smooth" }); };
+    // 화면(핀치) 확대 시 사진 영역만 반대로 축소해 실제 크기를 고정
+    const wrap = $("#gWrap"), vv = window.visualViewport;
+    if (vv) {
+      const fix = () => {
+        const z = vv.scale || 1;
+        if (z <= 1.01) { wrap.style.transform = ""; return; }
+        const host = wrap.parentElement.getBoundingClientRect();
+        const cy = vv.offsetTop + vv.height / 2 - (host.top + wrap.offsetTop - wrap.parentElement.offsetTop);
+        // 가로: 축소된 사진 영역이 보이는 화면 폭에 정확히 맞도록 원점 계산
+        const W = wrap.offsetWidth, rx = Math.max(0, Math.min(1, (vv.offsetLeft - host.left) / (W * (1 - 1 / z))));
+        wrap.style.transformOrigin = `${rx * W}px ${Math.max(0, Math.min(wrap.offsetHeight, cy))}px`;
+        wrap.style.transform = `scale(${1 / z})`;
+      };
+      vv.addEventListener("resize", fix); vv.addEventListener("scroll", fix); fix();
+    }
     // 사진 길게 눌러 저장·우클릭 방지
     [track, thumbs].forEach(el => el.addEventListener("contextmenu", e => e.preventDefault()));
   }

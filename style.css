@@ -195,6 +195,7 @@ input:focus,textarea:focus{outline:2px solid var(--olive-l);outline-offset:-1px}
 .stepper{display:grid;grid-template-columns:46px 1fr 46px;border:1px solid #cfcab9;background:#fff}
 .stepper button{font-size:20px;color:var(--olive-d)}
 .stepper input{border:0!important;text-align:center;font-family:var(--serif-en)!important;font-size:18px!important}
+.form-note{font-size:12px;color:var(--sub);line-height:1.6;margin-top:-4px}
 .agree{font-size:12px;color:var(--sub);display:flex;gap:8px;align-items:flex-start;line-height:1.6}
 .agree input{margin-top:3px;accent-color:var(--olive)}
 .attend-only{display:grid;gap:16px}

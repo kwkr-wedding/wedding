@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>김경원 ♥ 최규로 결혼합니다</title>
 <meta name="description" content="2027년 1월 23일 토요일 오후 6시, 웨스틴 조선 서울 1층 그랜드볼룸">
 <meta name="robots" content="noindex, nofollow">
@@ -75,7 +75,11 @@
   <section class="section reveal" id="gallerySec" hidden>
     <p class="label">GALLERY</p>
     <div class="gallery" id="gallery"></div>
-    <button class="btn ghost small" id="galleryMore" hidden>사진 더보기</button>
+    <div class="g-ctrl">
+      <button class="g-arrow" id="gPrev" aria-label="이전 사진">‹</button>
+      <div class="g-dots" id="gDots"></div>
+      <button class="g-arrow" id="gNext" aria-label="다음 사진">›</button>
+    </div>
   </section>
 
   <!-- 오시는 길 -->
@@ -178,8 +182,6 @@
       <label class="field"><span class="f-label">연락처 <em>(선택)</em></span>
         <input name="phone" type="tel" inputmode="tel" maxlength="20" placeholder="010-0000-0000"></label>
       <div class="attend-only">
-        <label class="field"><span class="f-label">본인 포함 인원</span>
-          <div class="stepper"><button type="button" data-step="-1">−</button><input name="count" type="number" min="1" max="10" value="1" readonly><button type="button" data-step="1">+</button></div></label>
         <div class="field">
           <span class="f-label">식사 여부</span>
           <div class="seg three">
@@ -209,14 +211,6 @@
       <button class="btn solid wide" type="submit">남기기</button>
     </form>
   </div>
-</div>
-
-<!-- 사진 확대 -->
-<div class="lightbox" id="lightbox" hidden>
-  <button class="close light" data-close>&times;</button>
-  <button class="lb-nav prev" id="lbPrev" aria-label="이전">‹</button>
-  <img id="lbImg" alt="">
-  <button class="lb-nav next" id="lbNext" aria-label="다음">›</button>
 </div>
 
 <div class="toast" id="toast"></div>

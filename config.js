@@ -69,7 +69,7 @@ window.WEDDING = {
 
   // 갤러리: assets/gallery/ 폴더에 사진을 넣고 파일명을 적어주세요. 비어 있으면 섹션이 숨겨집니다.
   gallery: [
-    // "01.jpg", "02.jpg", "03.jpg",
+    "01.jpg", "02.jpg", "03.jpg", "04.jpg",
   ],
 
   // 참석 의사(RSVP) · 방명록 저장용 Google Apps Script 웹앱 주소 (README 참고)

@@ -91,26 +91,26 @@
     a.download = "wedding.ics"; a.click();
   };
 
-  /* ---------- gallery ---------- */
+  /* ---------- gallery (swipe, 확대 없음) ---------- */
   const G = (C.gallery || []).map(f => /^https?:|\//.test(f) ? f : `assets/gallery/${f}`);
   if (G.length) {
     $("#gallerySec").hidden = false;
-    const LIMIT = 9; let shown = Math.min(LIMIT, G.length);
-    const render = () => {
-      $("#gallery").innerHTML = G.slice(0, shown).map((s, i) => `<button data-i="${i}" aria-label="사진 ${i + 1} 크게 보기"><img src="${esc(s)}" loading="lazy" alt=""></button>`).join("");
-      $("#galleryMore").hidden = shown >= G.length;
-    };
-    render();
-    $("#galleryMore").onclick = () => { shown = G.length; render(); };
-    let cur = 0;
-    const show = i => { cur = (i + G.length) % G.length; $("#lbImg").src = G[cur]; };
-    $("#gallery").onclick = e => { const b = e.target.closest("button"); if (!b) return; show(+b.dataset.i); openModal("#lightbox"); };
-    $("#lbPrev").onclick = () => show(cur - 1);
-    $("#lbNext").onclick = () => show(cur + 1);
-    let sx = 0;
-    $("#lightbox").addEventListener("touchstart", e => sx = e.touches[0].clientX, { passive: true });
-    $("#lightbox").addEventListener("touchend", e => { const dx = e.changedTouches[0].clientX - sx; if (Math.abs(dx) > 40) show(cur + (dx < 0 ? 1 : -1)); });
+    const track = $("#gallery");
+    track.innerHTML = G.map((s, i) => `<div class="g-slide"><img src="${esc(s)}" alt="사진 ${i + 1}" ${i ? 'loading="lazy"' : ""} draggable="false"></div>`).join("");
+    $("#gDots").innerHTML = G.map((_, i) => `<span${i ? "" : ' class="on"'}></span>`).join("");
+    const go = i => track.scrollTo({ left: track.clientWidth * Math.max(0, Math.min(G.length - 1, i)), behavior: "smooth" });
+    const idx = () => Math.round(track.scrollLeft / track.clientWidth);
+    track.addEventListener("scroll", () => { const k = idx(); $$("#gDots span").forEach((d, j) => d.classList.toggle("on", j === k)); }, { passive: true });
+    $("#gPrev").onclick = () => go(idx() - 1);
+    $("#gNext").onclick = () => go(idx() + 1);
+    if (G.length < 2) $(".g-ctrl").hidden = true;
+    // 사진 길게 눌러 저장·우클릭·드래그 방지
+    track.addEventListener("contextmenu", e => e.preventDefault());
   }
+  // 핀치 확대 방지 (iOS Safari는 viewport 설정을 무시하므로 별도 처리)
+  document.addEventListener("gesturestart", e => e.preventDefault());
+  let lastTouch = 0;
+  document.addEventListener("touchend", e => { const n = Date.now(); if (n - lastTouch < 300 && !e.target.closest("button,a,input,textarea,label")) e.preventDefault(); lastTouch = n; }, { passive: false });
 
   /* ---------- location ---------- */
   const q = encodeURIComponent(C.venue.name);
@@ -159,9 +159,9 @@
 
   /* ---------- modals ---------- */
   function openModal(sel) { $(sel).hidden = false; document.body.classList.add("locked"); }
-  function closeModal(m) { m.hidden = true; if (!$$(".modal:not([hidden]),.lightbox:not([hidden])").length) document.body.classList.remove("locked"); }
-  $$(".modal,.lightbox").forEach(m => m.addEventListener("click", e => { if (e.target === m || e.target.closest("[data-close]")) closeModal(m); }));
-  document.addEventListener("keydown", e => { if (e.key === "Escape") $$(".modal:not([hidden]),.lightbox:not([hidden])").forEach(closeModal); });
+  function closeModal(m) { m.hidden = true; if (!$$(".modal:not([hidden])").length) document.body.classList.remove("locked"); }
+  $$(".modal").forEach(m => m.addEventListener("click", e => { if (e.target === m || e.target.closest("[data-close]")) closeModal(m); }));
+  document.addEventListener("keydown", e => { if (e.key === "Escape") $$(".modal:not([hidden])").forEach(closeModal); });
 
   /* ---------- backend (Google Apps Script) ---------- */
   const API = C.appsScriptUrl;
@@ -175,11 +175,10 @@
   $("#rsvpOpen").onclick = () => openModal("#rsvpModal");
   const rf = $("#rsvpForm");
   rf.addEventListener("change", () => rf.classList.toggle("absent", rf.attend.value === "불참"));
-  $$("[data-step]", rf).forEach(b => b.onclick = () => { const i = rf.count; i.value = Math.min(10, Math.max(1, +i.value + +b.dataset.step)); });
   rf.addEventListener("submit", async e => {
     e.preventDefault();
     const data = { type: "rsvp", side: rf.side.value, attend: rf.attend.value, name: rf.name.value.trim(), phone: rf.phone.value.trim(),
-      count: rf.attend.value === "참석" ? +rf.count.value : 0, meal: rf.attend.value === "참석" ? rf.meal.value : "-", note: rf.note.value.trim() };
+      meal: rf.attend.value === "참석" ? rf.meal.value : "-", note: rf.note.value.trim() };
     if (!data.name) return;
     if (API) {
       const btn = rf.querySelector("[type=submit]"); btn.disabled = true; btn.textContent = "전달 중…";
@@ -187,7 +186,7 @@
       catch { toast("전송에 실패했어요. 잠시 후 다시 시도해주세요"); }
       finally { btn.disabled = false; btn.textContent = "전달하기"; }
     } else if (C.rsvpFallbackPhone) {
-      const body = `[참석 회신] ${data.side} / ${data.name} / ${data.attend}${data.count ? ` / ${data.count}명 / 식사 ${data.meal}` : ""}${data.note ? ` / ${data.note}` : ""}`;
+      const body = `[참석 회신] ${data.side} / ${data.name} / ${data.attend}${data.attend === "참석" ? ` / 식사 ${data.meal}` : ""}${data.note ? ` / ${data.note}` : ""}`;
       location.href = `sms:${C.rsvpFallbackPhone}${/iPhone|iPad/.test(navigator.userAgent) ? "&" : "?"}body=${encodeURIComponent(body)}`;
     } else {
       toast("참석 회신 기능이 아직 준비 중입니다");

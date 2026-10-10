@@ -24,9 +24,9 @@ function doPost(e) {
     const d = JSON.parse(e.postData.contents || "{}");
     const now = new Date();
     if (d.type === "rsvp") {
-      sheet_(RSVP_SHEET, ["시간", "구분", "참석여부", "성함", "연락처", "인원", "식사", "메모"])
+      sheet_(RSVP_SHEET, ["시간", "구분", "참석여부", "성함", "연락처", "식사", "메모"])
         .appendRow([now, clean_(d.side, 10), clean_(d.attend, 10), clean_(d.name, 20), clean_(d.phone, 20),
-                    Number(d.count) || 0, clean_(d.meal, 10), clean_(d.note, 200)]);
+                    clean_(d.meal, 10), clean_(d.note, 200)]);
     } else if (d.type === "guestbook") {
       sheet_(GB_SHEET, ["시간", "이름", "메시지", "숨김(체크하면 비공개)"])
         .appendRow([now, clean_(d.name, 20), clean_(d.message, 300), false]);

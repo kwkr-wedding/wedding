@@ -109,6 +109,12 @@
       thumbs.scrollTo({ left: t.offsetLeft - (thumbs.clientWidth - t.offsetWidth) / 2, behavior: "smooth" });
     };
     track.addEventListener("scroll", () => select(Math.round(track.scrollLeft / track.clientWidth)), { passive: true });
+    const go = k => track.scrollTo({ left: track.clientWidth * Math.max(0, Math.min(G.length - 1, k)), behavior: "smooth" });
+    $("#gPrev").onclick = () => go(cur - 1);
+    $("#gNext").onclick = () => go(cur + 1);
+    const arrows = () => { $("#gPrev").disabled = cur === 0; $("#gNext").disabled = cur === G.length - 1; };
+    arrows(); track.addEventListener("scroll", arrows, { passive: true });
+    if (G.length < 2) $(".g-ctrl").querySelectorAll(".g-arrow").forEach(b => b.hidden = true);
     thumbs.onclick = e => { const t = e.target.closest(".g-thumb"); if (!t) return; track.scrollTo({ left: track.clientWidth * +t.dataset.i, behavior: "smooth" }); };
     // 사진 길게 눌러 저장·우클릭 방지
     [track, thumbs].forEach(el => el.addEventListener("contextmenu", e => e.preventDefault()));

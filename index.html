@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>김경원 ♥ 최규로 결혼합니다</title>
+<meta name="description" content="2027년 1월 23일 토요일 오후 6시, 웨스틴 조선 서울 1층 그랜드볼룸">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#6f6d55">
+<!-- 링크 미리보기 (카카오톡·문자). 배포 주소가 바뀌면 og:url / og:image 도 같이 바꿔주세요 -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="김경원 ♥ 최규로 결혼합니다">
+<meta property="og:description" content="2027년 1월 23일 토요일 오후 6시 · 웨스틴 조선 서울 1층 그랜드볼룸">
+<meta property="og:url" content="https://kwkr-wedding.github.io/wedding/">
+<meta property="og:image" content="https://kwkr-wedding.github.io/wedding/assets/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%236f6d55'/><text x='32' y='42' font-size='26' text-anchor='middle' fill='%23f3f0e4' font-family='serif'>K&amp;K</text></svg>">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ───────── 봉투 인트로 ───────── -->
+<div id="envelope" class="envelope" role="button" tabindex="0" aria-label="청첩장 열기">
+  <div class="env-notch"></div>
+  <div class="env-inner">
+    <p class="env-small">THE WEDDING OF</p>
+    <h1 class="env-names"><span data-bind="groomEn">KYUNGWON</span><br>&amp; <span data-bind="brideEn">KYURO</span></h1>
+  </div>
+  <p class="env-hint">TOUCH TO OPEN</p>
+</div>
+
+<main id="app">
+
+  <!-- 표지 카드 -->
+  <section class="card cover reveal">
+    <img class="pavilion" src="assets/pavilion.png" alt="웨스틴 조선 서울 황궁우 일러스트" width="1100" height="736">
+    <p class="en date-en" id="dateEn">27.01.23</p>
+    <p class="en">SATURDAY, 6PM</p>
+    <span class="rule"></span>
+    <p class="en venue-en"><span data-bind="venueEn"></span><br><span data-bind="hallEn"></span></p>
+  </section>
+
+  <!-- 초대 글 -->
+  <section class="card invite reveal">
+    <p class="label">INVITATION</p>
+    <div class="greeting" id="greeting"></div>
+    <div class="parents" id="parents"></div>
+    <span class="rule"></span>
+    <p class="when" id="whenKo"></p>
+    <p class="where"><span data-bind="venueName"></span> <span data-bind="venueHall"></span></p>
+    <p class="addr" data-bind="address"></p>
+    <button class="btn ghost small" id="contactBtn" hidden>연락하기</button>
+  </section>
+
+  <!-- 캘린더 · D-day -->
+  <section class="section reveal">
+    <p class="label">SAVE THE DATE</p>
+    <h2 class="title" id="calTitle"></h2>
+    <div class="calendar" id="calendar"></div>
+    <div class="countdown" id="countdown">
+      <div><b id="cdD">0</b><span>DAYS</span></div>
+      <div><b id="cdH">0</b><span>HOUR</span></div>
+      <div><b id="cdM">0</b><span>MIN</span></div>
+      <div><b id="cdS">0</b><span>SEC</span></div>
+    </div>
+    <p class="dday-text" id="ddayText"></p>
+    <div class="btn-row">
+      <a class="btn ghost small" id="gcalBtn" target="_blank" rel="noopener">구글 캘린더에 추가</a>
+      <button class="btn ghost small" id="icsBtn">휴대폰 캘린더에 추가</button>
+    </div>
+  </section>
+
+  <!-- 갤러리 -->
+  <section class="section reveal" id="gallerySec" hidden>
+    <p class="label">GALLERY</p>
+    <div class="gallery" id="gallery"></div>
+    <button class="btn ghost small" id="galleryMore" hidden>사진 더보기</button>
+  </section>
+
+  <!-- 오시는 길 -->
+  <section class="section reveal" id="location">
+    <p class="label">LOCATION</p>
+    <h2 class="title">오시는 길</h2>
+    <p class="where strong"><span data-bind="venueName"></span> <span data-bind="venueHall"></span></p>
+    <p class="addr"><span data-bind="address"></span>
+      <button class="link-btn" data-copy-key="address">복사</button></p>
+    <p class="addr"><a id="venueTel" class="plain"></a></p>
+    <div class="map"><iframe id="mapFrame" title="지도" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+    <div class="nav-btns">
+      <a id="navNaver" target="_blank" rel="noopener"><i class="dot naver"></i>네이버 지도</a>
+      <a id="navKakao" target="_blank" rel="noopener"><i class="dot kakao"></i>카카오맵</a>
+      <a id="navTmap"><i class="dot tmap"></i>티맵</a>
+    </div>
+    <div class="transport" id="transport"></div>
+  </section>
+
+  <!-- 참석 의사 -->
+  <section class="section reveal" id="rsvp">
+    <p class="label">R.S.V.P.</p>
+    <h2 class="title">참석 의사 전달</h2>
+    <p class="body-text">축하의 마음으로 참석해주시는 모든 분들을<br>귀하게 모실 수 있도록, 참석 여부를 알려주세요.</p>
+    <p class="body-text muted" id="rsvpDeadline"></p>
+    <button class="btn solid" id="rsvpOpen">참석 의사 전달하기</button>
+  </section>
+
+  <!-- 마음 전하실 곳 -->
+  <section class="section reveal" id="accountsSec">
+    <p class="label">WITH LOVE</p>
+    <h2 class="title">마음 전하실 곳</h2>
+    <p class="body-text">참석이 어려우신 분들을 위해 기재했습니다.<br>너그러운 마음으로 양해 부탁드립니다.</p>
+    <div id="accounts"></div>
+  </section>
+
+  <!-- 방명록 -->
+  <section class="section reveal" id="guestbookSec" hidden>
+    <p class="label">GUESTBOOK</p>
+    <h2 class="title">축하 메시지</h2>
+    <div class="gb-list" id="gbList"><p class="muted center">불러오는 중…</p></div>
+    <button class="btn ghost small" id="gbMore" hidden>더보기</button>
+    <button class="btn solid" id="gbOpen">축하 메시지 남기기</button>
+  </section>
+
+  <!-- 공유 -->
+  <section class="section share reveal">
+    <div class="btn-row">
+      <button class="btn ghost" id="kakaoShare" hidden>카카오톡으로 공유</button>
+      <button class="btn ghost" id="nativeShare" hidden>공유하기</button>
+      <button class="btn ghost" id="copyLink">링크 복사</button>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p class="en">KYUNGWON &amp; KYURO</p>
+    <p class="en small">2027 . 01 . 23</p>
+  </footer>
+</main>
+
+<!-- 배경음악 -->
+<button id="bgmBtn" class="bgm" hidden aria-label="배경음악 켜기/끄기"><span></span><span></span><span></span></button>
+<audio id="bgm" loop preload="none"></audio>
+
+<!-- 눈 -->
+<canvas id="snow" aria-hidden="true"></canvas>
+
+<!-- 모달: 연락하기 -->
+<div class="modal" id="contactModal" hidden>
+  <div class="sheet">
+    <button class="close" data-close>&times;</button>
+    <p class="label">CONTACT</p>
+    <div id="contactList" class="contact-list"></div>
+  </div>
+</div>
+
+<!-- 모달: RSVP -->
+<div class="modal" id="rsvpModal" hidden>
+  <div class="sheet">
+    <button class="close" data-close>&times;</button>
+    <p class="label">R.S.V.P.</p>
+    <h3 class="title sm">참석 의사 전달</h3>
+    <form id="rsvpForm" autocomplete="on">
+      <div class="field">
+        <span class="f-label">구분</span>
+        <div class="seg">
+          <input type="radio" name="side" id="sideG" value="신랑측" checked><label for="sideG">신랑측</label>
+          <input type="radio" name="side" id="sideB" value="신부측"><label for="sideB">신부측</label>
+        </div>
+      </div>
+      <div class="field">
+        <span class="f-label">참석 여부</span>
+        <div class="seg">
+          <input type="radio" name="attend" id="attY" value="참석" checked><label for="attY">참석할게요</label>
+          <input type="radio" name="attend" id="attN" value="불참"><label for="attN">참석이 어려워요</label>
+        </div>
+      </div>
+      <label class="field"><span class="f-label">성함</span>
+        <input name="name" required maxlength="20" placeholder="성함을 입력해주세요"></label>
+      <label class="field"><span class="f-label">연락처 <em>(선택)</em></span>
+        <input name="phone" type="tel" inputmode="tel" maxlength="20" placeholder="010-0000-0000"></label>
+      <div class="attend-only">
+        <label class="field"><span class="f-label">본인 포함 인원</span>
+          <div class="stepper"><button type="button" data-step="-1">−</button><input name="count" type="number" min="1" max="10" value="1" readonly><button type="button" data-step="1">+</button></div></label>
+        <div class="field">
+          <span class="f-label">식사 여부</span>
+          <div class="seg three">
+            <input type="radio" name="meal" id="mealY" value="예정" checked><label for="mealY">예정</label>
+            <input type="radio" name="meal" id="mealN" value="안 함"><label for="mealN">안 함</label>
+            <input type="radio" name="meal" id="mealU" value="미정"><label for="mealU">미정</label>
+          </div>
+        </div>
+      </div>
+      <label class="field"><span class="f-label">전하실 말씀 <em>(선택)</em></span>
+        <textarea name="note" rows="2" maxlength="200"></textarea></label>
+      <label class="agree"><input type="checkbox" required> 참석 여부 확인을 위한 개인정보 수집·이용에 동의합니다.</label>
+      <button class="btn solid wide" type="submit">전달하기</button>
+    </form>
+  </div>
+</div>
+
+<!-- 모달: 방명록 작성 -->
+<div class="modal" id="gbModal" hidden>
+  <div class="sheet">
+    <button class="close" data-close>&times;</button>
+    <p class="label">GUESTBOOK</p>
+    <h3 class="title sm">축하 메시지 남기기</h3>
+    <form id="gbForm">
+      <label class="field"><span class="f-label">이름</span><input name="name" required maxlength="20"></label>
+      <label class="field"><span class="f-label">메시지</span><textarea name="message" rows="4" required maxlength="300"></textarea></label>
+      <button class="btn solid wide" type="submit">남기기</button>
+    </form>
+  </div>
+</div>
+
+<!-- 사진 확대 -->
+<div class="lightbox" id="lightbox" hidden>
+  <button class="close light" data-close>&times;</button>
+  <button class="lb-nav prev" id="lbPrev" aria-label="이전">‹</button>
+  <img id="lbImg" alt="">
+  <button class="lb-nav next" id="lbNext" aria-label="다음">›</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

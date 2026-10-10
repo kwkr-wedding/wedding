@@ -28,6 +28,10 @@ GitHub Pages(깃허브 정적 웹호스팅)로 배포하는 단일 페이지 청
 | 배경음악 | `assets/bgm.mp3` 추가 후 `bgm: "assets/bgm.mp3"` |
 | 눈 효과 | `snow: false`로 끄기 |
 
+## 현재 연결 상태
+- RSVP·방명록: `Wedding Prep` 시트(kyungwonkim93 소유)의 `RSVP`·`Guestbook` 탭. 스크립트는 시트에 연결된 Apps Script로, kyungwonkim93 계정으로 실행됩니다.
+- 스크립트를 수정하면 Apps Script에서 배포 → 배포 관리 → 편집(연필) → 버전: 새 버전 → 배포 (주소는 그대로 유지됩니다).
+
 ## 확인 필요
 - 교통·주차 안내는 일반 정보로 적어두었습니다. 지하철 출구 번호와 하객 무료 주차 시간은 웨스틴 조선 웨딩팀에 확인 후 `venue.transport`를 수정하세요.
 

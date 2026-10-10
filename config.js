@@ -74,7 +74,7 @@ window.WEDDING = {
 
   // 참석 의사(RSVP) · 방명록 저장용 Google Apps Script 웹앱 주소 (README 참고)
   // 비워두면 RSVP는 문자(SMS) 전송 방식으로, 방명록은 숨김 처리됩니다.
-  appsScriptUrl: "",
+  appsScriptUrl: "https://script.google.com/macros/s/AKfycbzdutqZ2i3X4YLUOkJhquAYVJtkCk70HJ3a3V53MqdJ4zlMNZjMRO87yhevFdZ-X6gA/exec",
   rsvpDeadline: "2027-01-09",       // 회신 요청일 (표시용)
   rsvpFallbackPhone: "",            // appsScriptUrl 이 없을 때 RSVP 문자를 받을 번호
 

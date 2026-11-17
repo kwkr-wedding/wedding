@@ -475,7 +475,7 @@
     // 장면 0
     if (near(s0, .2)) {
       const p = pinP(s0, 0);
-      T(heroPhoto, `${(-p * 2).toFixed(2)}%`, 1 + p * .18);   // 내릴수록 사진이 다가옴
+      T(heroPhoto, `${(-p * 2).toFixed(2)}%`, 1 + p * .08);   // 내릴수록 사진이 살짝 다가옴
       T(heroText, `${(-p * 150).toFixed(1)}px`); heroText.style.opacity = 1 - seg(p, .35, .95);
       hint.style.opacity = 1 - seg(p, 0, .15);
     }

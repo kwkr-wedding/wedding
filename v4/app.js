@@ -190,7 +190,7 @@
   /* ---------- 모달 ---------- */
   function unlock() {
     if (!$$(".modal:not([hidden])").length && lb.hidden) document.body.classList.remove("locked");
-    if (introFlow) setTimeout(() => { if (introFlow && !$$(".modal:not([hidden])").length) { introFlow = false; holdY = null; afterIntro(); } }, 60);
+    if (introFlow) setTimeout(() => { if (introFlow && !$$(".modal:not([hidden])").length) { introFlow = false; holdY = null; document.documentElement.classList.remove("hold"); afterIntro(); } }, 60);
   }
   function openModal(sel) { $(sel).hidden = false; document.body.classList.add("locked"); }
   function closeModal(m) { m.hidden = true; unlock(); }
@@ -237,14 +237,24 @@
     if (store.get("rsvp_done") || store.get("rsvp_skip") === todayKey()) return;
     if ($$(".modal:not([hidden])").length || !lb.hidden) return;
     introFlow = true; thanked = false;
-    // 창이 떠 있는 동안 뒤 화면은 첫 화면 끝에 멈춰 둡니다(관성으로 장면 1까지 넘어가지 않게)
-    const top1 = $("#s1").getBoundingClientRect().top + scrollY;
-    holdY = Math.min(scrollY, Math.round(top1 - .12 * innerHeight));
-    window.scrollTo(0, holdY);
+    // 창이 떠 있는 동안: 손으로는 더 내려가지 않게 막고(관성도 멈춤), 뒤 화면은 첫 화면이 완전히 넘어가는 지점(장면 1 시작)까지
+    // 천천히 감속하며 저절로 내려갑니다. "어릴 적 인연이"는 창을 닫은 뒤에 나옵니다.
+    holdY = Math.round($("#s1").getBoundingClientRect().top + scrollY);
+    document.documentElement.classList.add("hold");
+    if (RM) window.scrollTo(0, holdY);
+    else {
+      const y0 = scrollY, d = holdY - y0, ms = Math.min(1400, 700 + Math.abs(d) * 2.5), t0 = performance.now();
+      const step = now => {
+        if (holdY == null) return;
+        const k = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - k, 3);   // 감속
+        window.scrollTo(0, Math.round(y0 + d * e));
+        if (k < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
     openModal("#rsvpIntro");
   };
   let holdY = null;
-  addEventListener("scroll", () => { if (holdY != null && Math.abs(scrollY - holdY) > 1) window.scrollTo(0, holdY); }, { passive: true });
   const holdBlock = e => { if (holdY != null && !e.target.closest(".modal-card, .modal form, .modal .sheet")) e.preventDefault(); };
   addEventListener("touchmove", holdBlock, { passive: false });
   addEventListener("wheel", holdBlock, { passive: false });

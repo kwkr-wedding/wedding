@@ -116,9 +116,11 @@ body.ink-light .scene[data-ink=light]{color:var(--paper)}
 #shotDoor img{transform-origin:56% 34%}
 .line.l2{top:calc(14 * var(--vh));color:var(--ink);text-shadow:0 0 16px rgba(255,255,255,.9),0 0 3px rgba(255,255,255,.8)}
 #shotDoor::after{content:"";position:absolute;left:0;right:0;bottom:0;height:46%;background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.6))}
-/* 문 장면의 끝: 문밖의 빛이 번져 화면이 바탕색으로 하얗게 바뀝니다 (app.js 가 크기와 투명도를 조절). 색은 바탕색(--sky)을 따라갑니다 */
-.wash{position:absolute;left:52%;top:38%;width:200%;aspect-ratio:1;border-radius:50%;opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(.2);will-change:transform,opacity;
-  background:radial-gradient(closest-side,var(--sky,#f4f4f1) 0,var(--sky,#f4f4f1) 22%,rgba(244,244,241,.72) 48%,rgba(244,244,241,.3) 74%,rgba(244,244,241,0) 100%)}
+/* 문 장면의 끝: 프레임 안에서 문밖이 먼저 밝게 날아가고 두 사람이 빛 속으로 사라집니다.
+   마지막에 이 막이 바탕색(--sky)으로 덮어, 아래 정원 사진의 흐린 가장자리와 색이 정확히 이어집니다 */
+.wash{position:absolute;inset:0;opacity:0;pointer-events:none;background:var(--sky,#f4f4f1);will-change:opacity}
+.lit #shotDoor::after{display:none}
+.lit .names{color:var(--ink);text-shadow:0 0 16px rgba(255,255,255,.9),0 0 3px rgba(255,255,255,.8)}
 .names{bottom:calc(16 * var(--vh) + var(--quick));font-size:clamp(22px,6.4vw,30px);letter-spacing:.2em}
 .names i{font-style:normal;margin:0 .5em;opacity:.8}
 

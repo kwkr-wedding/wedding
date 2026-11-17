@@ -421,7 +421,7 @@
   const heroPhoto = el("heroPhoto"), heroText = el("heroText"), hint = el("scrollHint");
   const tv = el("tv"), s1Line = el("s1Line"), tvNote = el("tvNote");
   const imgPropose = $("#shotPropose img"), shotDoor = el("shotDoor"), imgDoor = $("#shotDoor img"), s2Line = el("s2Line"), s2Names = el("s2Names"), s2Wash = el("s2Wash");
-  let lastInk = -1;
+  if (seqDoor) s2.classList.add("lit");
   const garden = el("garden"), gBg = $(".g-bg"), gGroom = $(".g-groom"), gVeil = $(".g-veil");
   const night = el("nightPhoto"), six = el("six"), sixT = $(".six-t"), sixTb = el("sixT"), sixD = el("sixD"), sixK = el("sixK");
   const clock = el("clock"), clockT = el("clockT"), lights = el("lights"), endPhoto = el("endPhoto"), endImg = $("#endPhoto img");
@@ -457,18 +457,9 @@
       s2Line.style.opacity = seg(p, .12, .22) * (1 - seg(p, .44, .52));
       shotDoor.style.opacity = ease(seg(p, .5, .64));
       if (seqDoor) seqDoor.draw(seg(p, .5, .96)); else imgDoor.style.transform = `scale(${(1 + .5 * seg(p, .5, 1)).toFixed(4)})`;
-      // 두 사람이 문을 나서면 문밖의 빛이 번져 화면이 바탕색으로 바뀌고, 아래 정원 사진의 흐린 가장자리로 이어집니다
-      const w = seg(p, .76, .96);
-      s2Wash.style.opacity = seg(w, 0, .25);
-      s2Wash.style.transform = `translate(-50%,-50%) scale(${(.25 + 7.6 * w * w * w).toFixed(3)})`;
-      // 이름은 어두운 사진 위에서는 흰 글씨, 화면이 밝아지면 먹색 글씨
-      s2Names.style.opacity = seg(p, .7, .78);
-      const ink = Math.round(seg(p, .885, .925) * 20) / 20;
-      if (ink !== lastInk) {
-        lastInk = ink;
-        s2Names.style.color = `rgb(${[255, 255, 255].map((v, i) => Math.round(v + ([35, 38, 42][i] - v) * ink)).join(",")})`;
-        s2Names.style.textShadow = `0 1px 18px rgba(0,0,0,${(.55 * (1 - ink)).toFixed(2)}),0 0 2px rgba(0,0,0,${(.35 * (1 - ink)).toFixed(2)})`;
-      }
+      // 문 프레임의 끝은 빛으로 하얗게 바뀝니다. 마지막에 바탕색 막을 덮고, 이름은 밝아진 화면 위에 먹색으로 나타납니다
+      s2Wash.style.opacity = seqDoor ? seg(p, .92, .96) : 0;
+      s2Names.style.opacity = seqDoor ? seg(p, .9, .96) : seg(p, .7, .78) * (1 - seg(p, .94, 1));
     }
     // 장면 3 · 정원 사진 세 겹
     if (!RM && near(garden, .2)) {

@@ -7,7 +7,7 @@
 오셔서 저희의 소중한 날을 함께 축복해 주신다면<br>
 더 없는 영광으로 간직하겠습니다.
 
-**[모바일 청첩장 보기](https://kwkr-wedding.github.io/wedding/)**
+**[모바일 청첩장 보기](https://kwkr-wedding.github.io/wedding/v4/)**
 
 </div>
 

@@ -485,8 +485,8 @@
   const prA = el("prA"), prB = el("prB"), prB2 = el("prB2");
   const capA = $("#prA figcaption"), capB = $("#prB figcaption");
   const stFig = story.map((_, i) => el(`st${i + 1}`)), stCap = stFig.map(f => f.querySelector("figcaption")), stNote = story.map((_, i) => el(`sn${i + 1}`));
-  const ST0 = .29, STEP = .095, stAt = i => ST0 + i * STEP;
-  const st7 = el("st7"), bridge = el("bridge"), st7img = $("#st7 img"), bridgeImg = $("#bridge img");   // 이야기 장면 i 가 놓이기 시작하는 지점
+  const ST0 = .285, STEP = .1, stAt = i => ST0 + i * STEP;
+  const st7 = el("st7"), bridge = el("bridge"), st7img = $("#st7 img"), bridgeImgs = [...document.querySelectorAll("#bridge img")], bridgeReal = $("#bridge .real");   // 이야기 장면 i 가 놓이기 시작하는 지점
   const stRot = [-1, 1.6, -2, 1.2, -1.5, .6];
   // 사진 한 장이 살짝 기운 채 위에서 내려앉습니다. t = 0~1, rot = 놓인 뒤의 기울기
   const dropIn = (fig, t, rot, from) => {
@@ -518,47 +518,51 @@
     if (near(s1, 1.5)) { jump.load(); brideCam.load(); }
     if (near(s1, .2)) {
       const p = pinP(s1, 1);
-      s1Line.style.opacity = seg(p, 0, .025); T(s1Line, `${(18 * (1 - ease(seg(p, 0, .03)))).toFixed(1)}px`);
-      dropIn(prA, seg(p, .005, .03), -2.5, 7); jump.draw(seg(p, .03, .13));
-      dropIn(prB, seg(p, .145, .17), 2.2, -7); brideCam.draw(seg(p, .17, .265));
-      dropIn(prB2, seg(p, .235, .26), 5, -8);
+      s1Line.style.opacity = seg(p, 0, .02); T(s1Line, `${(18 * (1 - ease(seg(p, 0, .025)))).toFixed(1)}px`);
+      dropIn(prA, seg(p, .005, .025), -2.5, 7); jump.draw(seg(p, .025, .13));
+      dropIn(prB, seg(p, .14, .16), 2.2, -7); brideCam.draw(seg(p, .16, .265));
+      dropIn(prB2, seg(p, .2, .22), 5, -8);
       const realOff = 1 - seg(p, stAt(1) + .03, stAt(1) + .06);   // 이야기 두 번째 장이 놓이면 옛 사진·영상은 물러납니다
       if (realOff < 1) [prA, prB, prB2].forEach(f => f.style.opacity = Math.min(+f.style.opacity, realOff));
       const capOff = 1 - seg(p, ST0, ST0 + .02); capA.style.opacity = capOff; capB.style.opacity = capOff;
-      tvNote.style.opacity = seg(p, .025, .045) * (1 - seg(p, .13, .145));
-      noteB.style.opacity = seg(p, .16, .18) * (1 - seg(p, ST0 - .012, ST0 + .005));
+      tvNote.style.opacity = seg(p, .02, .04) * (1 - seg(p, .125, .14));
+      noteB.style.opacity = seg(p, .15, .17) * (1 - seg(p, ST0 - .012, ST0 + .005));
       const at7 = stAt(story.length);
       story.forEach((sq, i) => {
         const at = stAt(i), next = i + 1 < story.length ? stAt(i + 1) : at7;
         if (p > at - .15) sq.load();
-        dropIn(stFig[i], seg(p, at, at + .03), stRot[i], i % 2 ? -6 : 6);
-        sq.draw(seg(p, at + .03, at + .085));
+        dropIn(stFig[i], seg(p, at, at + .025), stRot[i], i % 2 ? -6 : 6);
+        sq.draw(seg(p, at + .025, at + .09));
         const gone = i + 2 < story.length ? stAt(i + 2) : at7 + .03;
         stFig[i].style.opacity = Math.min(+stFig[i].style.opacity, 1 - seg(p, gone + .03, gone + .06));
         stCap[i].style.opacity = 1 - seg(p, next, next + .02);
         stNote[i].style.opacity = seg(p, at + .01, at + .03) * (1 - seg(p, next - .012, next + .005));
       });
-      dropIn(st7, seg(p, at7, at7 + .03), 0, 5);
-      const zf = 1 - seg(p, at7 + .05, at7 + .09);   // 그림이 커지기 시작하면 아래 사진들은 물러납니다
+      dropIn(st7, seg(p, at7, at7 + .02), 0, 5);
+      const zf = 1 - seg(p, at7 + .025, at7 + .05);   // 그림이 커지기 시작하면 아래 사진들은 물러납니다
       if (zf < 1) stFig.forEach(f => f.style.opacity = Math.min(+f.style.opacity, zf));
-      s1Line.style.opacity = Math.min(+s1Line.style.opacity, 1 - seg(p, at7 + .04, at7 + .07));
+      s1Line.style.opacity = Math.min(+s1Line.style.opacity, 1 - seg(p, at7 + .02, at7 + .045));
     }
-    // 프러포즈 그림 → 화면 가득 → 장면 2 의 실제 사진 (고정된 막 하나로 이어 붙여 장면 사이 이음매가 보이지 않게 합니다)
-    if (!RM && (near(s1, .2) || near(s2, .2))) {
-      const at7 = stAt(story.length), p1 = pinP(s1, 1), z = ease(seg(p1, at7 + .05, .985));
-      const r2 = s2.getBoundingClientRect(), p2 = r2.top > 0 ? 0 : pinP(s2, 0);
-      const o = (p1 < at7 + .05 ? 0 : 1) * (1 - seg(p2, .02, .12));
-      bridge.style.visibility = o > 0 ? "visible" : "hidden";
-      bridge.style.opacity = o;
-      if (o > 0) {
-        // 인화 사진 속 그림의 자리 → 화면을 가득 채우는 자리 (장면 2 사진과 같은 object-fit:cover 위치)로 그림 자체를 키웁니다
-        const b = bridge.getBoundingClientRect(), r = st7img.getBoundingClientRect();
-        const k = Math.max(b.width / 9, b.height / 16), cw = 9 * k, ch = 16 * k, cl = (b.width - cw) / 2, ct = (b.height - ch) / 2;
-        const lerp = (x, y) => (x + (y - x) * z).toFixed(1) + "px";
-        Object.assign(bridgeImg.style, { left: lerp(r.left - b.left, cl), top: lerp(r.top - b.top, ct), width: lerp(r.width, cw), height: lerp(r.height, ch) });
-        bridge.style.background = z >= 1 || p2 > 0 ? "var(--sky)" : "transparent";
-      }
-    } else if (bridge.style.visibility !== "hidden") { bridge.style.visibility = "hidden"; bridge.style.opacity = 0; }
+    // 프러포즈 그림 → 화면 가득 → 그 자리에서 실제 사진으로 → 장면 2 (장면 2 는 장면 1 의 마지막 화면 높이만큼 겹쳐 시작하므로 빈 구간이 없습니다)
+    {
+      const r2 = s2.getBoundingClientRect(), before = r2.top > 1;
+      s2.style.visibility = !RM && before ? "hidden" : "";   // 겹쳐 올라오는 동안에는 장면 1 의 그림이 보이게 합니다
+      if (!RM && before && near(s1, .2)) {
+        const at7 = stAt(story.length), p1 = pinP(s1, 1), z = ease(seg(p1, at7 + .02, at7 + .075));
+        const o = p1 < at7 + .02 ? 0 : 1;
+        bridge.style.visibility = o ? "visible" : "hidden"; bridge.style.opacity = o;
+        if (o) {
+          // 인화 사진 속 그림의 자리 → 장면 2 사진과 같은 object-fit:cover 자리로 키운 뒤, 실제 사진으로 바꿉니다
+          const b = bridge.getBoundingClientRect(), r = st7img.getBoundingClientRect();
+          const k = Math.max(b.width / 9, b.height / 16), cw = 9 * k, ch = 16 * k, cl = (b.width - cw) / 2, ct = (b.height - ch) / 2;
+          const lerp = (x, y) => (x + (y - x) * z).toFixed(1) + "px";
+          const box = { left: lerp(r.left - b.left, cl), top: lerp(r.top - b.top, ct), width: lerp(r.width, cw), height: lerp(r.height, ch) };
+          bridgeImgs.forEach(im => Object.assign(im.style, box));
+          bridgeReal.style.opacity = ease(seg(p1, at7 + .07, at7 + .105));
+          bridge.style.background = z >= 1 ? "var(--sky)" : "transparent";
+        }
+      } else if (bridge.style.visibility !== "hidden") { bridge.style.visibility = "hidden"; bridge.style.opacity = 0; }
+    }
     // 장면 2 · 프러포즈 → 문밖 정원
     if (near(s2, 1) ) { seqPropose && seqPropose.load(); seqDoor && seqDoor.load(); }
     if (near(s2, .2)) {

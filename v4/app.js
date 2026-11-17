@@ -276,18 +276,40 @@
   const near = (el, m = 1) => { const r = el.getBoundingClientRect(); return r.bottom > -vh * m && r.top < vh * (1 + m); };
 
   /* 프레임 묶음을 스크롤로 넘기는 재생기.
-   * 스크롤 위치가 두 프레임 사이에 있으면 두 장을 겹쳐 그려서, 프레임 수가 적어도 부드럽게 넘어갑니다. */
+   * - 스크롤 위치를 바로 따라가지 않고 짧게(약 0.07초) 미끄러지듯 따라가서, 스크롤이 툭툭 끊겨도 화면은 매 주사(60·120Hz)마다 조금씩 움직입니다.
+   * - 위치가 두 프레임 사이면 두 장을 겹쳐 그립니다.
+   * - 프레임은 8장 간격 → 4장 → 2장 → 1장 순서로 불러와서, 다 받기 전에도 장면 전체가 보이고 점점 촘촘해집니다. */
+  const gliding = new Set();
+  let glideId = 0, glideT = 0;
+  const glide = now => {
+    const dt = Math.min(64, glideT ? now - glideT : 16); glideT = now;
+    const k = 1 - Math.exp(-dt / 70);
+    gliding.forEach(s => {
+      const d = s.target - s.cur;
+      if (Math.abs(d) < .02) { s.cur = s.target; gliding.delete(s); } else s.cur += d * k;
+      s.paint();
+    });
+    glideId = gliding.size ? requestAnimationFrame(glide) : 0;
+    if (!glideId) glideT = 0;
+  };
   class Seq {
-    constructor(canvas, url, count, cover) { Object.assign(this, { canvas, url, count, cover, imgs: [], last: "", want: 0, started: false }); this.ctx = canvas.getContext("2d"); }
+    constructor(canvas, url, count, cover) { Object.assign(this, { canvas, url, count, cover, imgs: [], last: "", cur: -1, target: 0, started: false }); this.ctx = canvas.getContext("2d"); }
     load() {
       if (this.started) return; this.started = true;
-      for (let i = 0; i < this.count; i++) {
+      const order = [], seen = new Set(), add = i => { if (!seen.has(i)) { seen.add(i); order.push(i); } };
+      for (const step of [8, 4, 2, 1]) { for (let i = 0; i < this.count; i += step) add(i); add(this.count - 1); }
+      order.forEach(i => {
         const im = new Image(); im.decoding = "async";
-        im.onload = () => { im.ok = true; this.paint(); };
+        im.onload = () => { im.ok = true; this.last = ""; this.paint(); };
         im.src = this.url(i); this.imgs[i] = im;
-      }
+      });
     }
-    draw(p) { this.want = clamp(p) * (this.count - 1); this.paint(); }
+    draw(p) {
+      this.target = clamp(p) * (this.count - 1);
+      if (this.cur < 0 || RM || Math.abs(this.target - this.cur) < .02) { this.cur = this.target; gliding.delete(this); return this.paint(); }
+      gliding.add(this);
+      if (!glideId) glideId = requestAnimationFrame(glide);
+    }
     put(im, alpha) {
       const c = this.canvas, x = this.ctx;
       x.globalAlpha = alpha;
@@ -296,15 +318,20 @@
       x.drawImage(im, (c.width - w) / 2, (c.height - h) / 2, w, h);
     }
     paint() {
-      const ok = i => this.imgs[i] && this.imgs[i].ok;
-      let i = Math.floor(this.want), t = Math.round((this.want - i) * 16) / 16;
-      if (!ok(i)) { while (i > 0 && !ok(i)) i--; t = 0; }   // 아직 안 받은 프레임이면 가장 가까운 앞 프레임
-      if (!ok(i)) return;
-      const blend = t > 0 && ok(i + 1), key = blend ? `${i}+${t}` : `${i}`;
+      const ok = i => this.imgs[i] && this.imgs[i].ok, w = Math.max(0, this.cur);
+      // 지금 위치 앞뒤로 이미 받은 프레임을 찾아 그 사이를 겹쳐 그립니다
+      let lo = Math.floor(w), hi = Math.ceil(w);
+      while (lo > 0 && !ok(lo)) lo--;
+      while (hi < this.count - 1 && !ok(hi)) hi++;
+      if (!ok(lo)) { if (!ok(hi)) return; lo = hi; }
+      if (!ok(hi)) hi = lo;
+      let t = hi > lo ? Math.round((w - lo) / (hi - lo) * 32) / 32 : 0;
+      if (t >= 1) { lo = hi; t = 0; }
+      const key = t > 0 ? `${lo}+${hi}+${t}` : `${lo}`;
       if (key === this.last) return;
       this.last = key;
-      this.put(this.imgs[i], 1);
-      if (blend) this.put(this.imgs[i + 1], t);
+      this.put(this.imgs[lo], 1);
+      if (t > 0) this.put(this.imgs[hi], t);
       this.ctx.globalAlpha = 1;
     }
   }
@@ -313,7 +340,7 @@
     if (!conf || !conf.count || RM) return null;
     const cv = document.createElement("canvas");
     $(boxSel).appendChild(cv);
-    return new Seq(cv, i => `assets/${conf.dir}/${String(i).padStart(3, "0")}.webp`, conf.count, true);
+    return new Seq(cv, i => `assets/${conf.dir}/${String(i).padStart(3, "0")}.webp${conf.v ? "?v=" + conf.v : ""}`, conf.count, true);
   };
   const seqPropose = coverSeq("#shotPropose", V.sequences.propose), seqDoor = coverSeq("#shotDoor", V.sequences.door);
   // 캔버스 크기는 화면 전체가 아니라 장면 칸에 맞춥니다 (큰 화면에서는 칸이 가운데 휴대폰 너비로 좁아집니다)

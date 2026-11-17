@@ -17,8 +17,8 @@
 <meta property="og:image:height" content="630">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23101613'/><text x='32' y='42' font-size='26' text-anchor='middle' fill='%23f2d08a' font-family='serif'>6:00</text></svg>">
 <link rel="preload" as="image" href="assets/hero.webp?v=3" fetchpriority="high">
-<link rel="stylesheet" href="fonts.css?v=202611170009">
-<link rel="stylesheet" href="style.css?v=202611170009">
+<link rel="stylesheet" href="fonts.css?v=202611170010">
+<link rel="stylesheet" href="style.css?v=202611170010">
 </head>
 <body>
 
@@ -244,7 +244,7 @@
   </div>
 </div>
 
-<!-- 접속 초반에 뜨는 참석 의사 안내 (config.js 의 v4.rsvpPopup 이 true 일 때만) -->
+<!-- 첫 화면에서 스크롤을 시작하면 뜨는 참석 의사 안내 (config.js 의 v4.rsvpPopup 이 true 일 때만) -->
 <div class="modal center" id="rsvpIntro" hidden>
   <div class="sheet pop" role="dialog" aria-labelledby="rsvpIntroTitle">
     <button class="close" data-close aria-label="닫기">&times;</button>
@@ -267,9 +267,12 @@
   <img id="lbImg" alt="" draggable="false">
 </div>
 
+<!-- 첫 회신 창을 닫은 뒤 이어서 보기 안내 -->
+<div class="cue" id="cue" aria-live="polite"><small id="cueThanks" hidden>소중한 회신 감사합니다</small><span>이어서 화면을 내려주세요!</span><i></i></div>
+
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=202611170009"></script>
-<script src="app.js?v=202611170009"></script>
+<script src="../config.js?v=202611170010"></script>
+<script src="app.js?v=202611170010"></script>
 </body>
 </html>

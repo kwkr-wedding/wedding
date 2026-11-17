@@ -188,7 +188,10 @@
   };
 
   /* ---------- 모달 ---------- */
-  function unlock() { if (!$$(".modal:not([hidden])").length && lb.hidden) document.body.classList.remove("locked"); }
+  function unlock() {
+    if (!$$(".modal:not([hidden])").length && lb.hidden) document.body.classList.remove("locked");
+    if (introFlow) setTimeout(() => { if (introFlow && !$$(".modal:not([hidden])").length) { introFlow = false; afterIntro(); } }, 60);
+  }
   function openModal(sel) { $(sel).hidden = false; document.body.classList.add("locked"); }
   function closeModal(m) { m.hidden = true; unlock(); }
   $$(".modal").forEach(m => m.addEventListener("click", e => { if (e.target === m || e.target.closest("[data-close]")) closeModal(m); }));
@@ -212,7 +215,7 @@
     if (!data.name) return;
     if (API) {
       const btn = rf.querySelector("[type=submit]"); btn.disabled = true; btn.textContent = "전달 중…";
-      try { await post(data); toast("소중한 회신 감사합니다"); rf.reset(); rf.classList.remove("absent"); closeModal($("#rsvpModal")); store.set("rsvp_done", "1"); }
+      try { await post(data); if (introFlow) thanked = true; else toast("소중한 회신 감사합니다"); rf.reset(); rf.classList.remove("absent"); closeModal($("#rsvpModal")); store.set("rsvp_done", "1"); }
       catch { toast("전송에 실패했어요. 잠시 후 다시 시도해주세요"); }
       finally { btn.disabled = false; btn.textContent = "전달하기"; }
     } else if (C.rsvpFallbackPhone) {
@@ -220,16 +223,46 @@
       location.href = `sms:${C.rsvpFallbackPhone}${/iPhone|iPad/.test(navigator.userAgent) ? "&" : "?"}body=${encodeURIComponent(body)}`;
     } else toast("참석 회신 기능이 아직 준비 중입니다");
   });
-  // 접속 초반 안내 창 (v4.rsvpPopup: true 일 때, 첫 화면을 지나면 한 번)
+  /* 첫 화면에서 스크롤을 시작하면 참석 의사 안내 창을 먼저 띄웁니다 (v4.rsvpPopup: true).
+   * 회신을 마치거나, "오늘 하루 보지 않기"·닫기로 넘기면 "이어서 화면을 내려주세요!"가 잠깐 뜨고
+   * 화면이 저절로 "어릴 적 인연이" 장면까지 천천히 내려갑니다. 이미 회신했거나 오늘 넘긴 분, 예식이 지난 뒤에는 뜨지 않습니다. */
   $("#popWhen").textContent = `${Y}. ${pad(M)}. ${pad(DD)} (${DOW_KO}) ${hourKo}`;
   const todayKey = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
-  let introShown = false;
+  let introShown = false, introFlow = false, thanked = false, navJump = 0;
+  // 바로가기·링크로 다른 곳에 이동하는 중에는 띄우지 않습니다
+  document.addEventListener("click", e => { if (e.target.closest('a[href^="#"]')) navJump = Date.now(); });
   const showRsvpIntro = () => {
     if (introShown || !V.rsvpPopup || Date.now() > D.getTime()) return;
     introShown = true;
     if (store.get("rsvp_done") || store.get("rsvp_skip") === todayKey()) return;
     if ($$(".modal:not([hidden])").length || !lb.hidden) return;
+    introFlow = true; thanked = false;
     openModal("#rsvpIntro");
+  };
+  // 화면을 정해진 위치까지 부드럽게 내립니다. 그사이 화면을 만지면 멈춥니다
+  const glideTo = (y, ms) => {
+    if (RM) return window.scrollTo(0, y);
+    const y0 = scrollY, t0 = performance.now(); let stop = false;
+    const halt = () => { stop = true; };
+    ["touchstart", "wheel", "keydown"].forEach(t => addEventListener(t, halt, { once: true, passive: true }));
+    const step = now => {
+      if (stop) return;
+      const k = Math.min(1, (now - t0) / ms), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+      window.scrollTo(0, Math.round(y0 + (y - y0) * e));
+      if (k < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  };
+  let cueT = 0;
+  const afterIntro = () => {
+    const cue = $("#cue");
+    $("#cueThanks").hidden = !thanked;
+    cue.classList.add("show");
+    clearTimeout(cueT); cueT = setTimeout(() => cue.classList.remove("show"), 3200);
+    // "어릴 적 인연이" 글이 다 떠오른 지점까지
+    const s1 = el("s1"), top = s1.getBoundingClientRect().top + scrollY;
+    const target = Math.round(top + .17 * (s1.offsetHeight - innerHeight));
+    if (target > scrollY) setTimeout(() => glideTo(target, Math.min(2600, 1200 + (target - scrollY) * .6)), 450);
   };
   $("#rsvpIntroGo").onclick = () => { closeModal($("#rsvpIntro")); openModal("#rsvpModal"); };
   $("#rsvpIntroSkip").onclick = () => { store.set("rsvp_skip", todayKey()); closeModal($("#rsvpIntro")); };
@@ -487,7 +520,8 @@
     } else { clock.classList.remove("off"); setLit(0, 0); setLit(1, 0); }
     // 마지막 사진
     if (!RM && near(endPhoto, .2)) T(endImg, `${((viewP(endPhoto) - .5) * 90).toFixed(1)}px`);
-    if (scrollY > vh * .9) showRsvpIntro();
+    // 첫 화면 안에서 내리기 시작하면 바로 (바로가기로 다른 곳에 갔을 때는 띄우지 않음)
+    if (!introShown && scrollY > 6 && scrollY < s1.getBoundingClientRect().top + scrollY && Date.now() - navJump > 2500) showRsvpIntro();
   };
   let ticking = false;
   const req = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };

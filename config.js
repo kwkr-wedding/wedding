@@ -178,8 +178,9 @@ window.WEDDING = {
 
   /* ── 아래는 V4 전용 설정입니다 (다른 버전에는 영향 없음). 사진·영상은 v4/assets/ 폴더에 있습니다 ── */
   v4: {
-    // 접속 초반(첫 화면을 지난 직후)에 참석 의사 전달 창을 띄울지. false 면 맨 아래 "참석 회신"에서만 받습니다.
-    rsvpPopup: false,
+    // 첫 화면에서 내리기 시작하면 참석 의사 전달 창을 먼저 띄울지. 창을 닫으면 "어릴 적 인연이" 장면까지 저절로 내려갑니다.
+    // false 면 맨 아래 "참석 회신"과 하단 바로가기에서만 받습니다.
+    rsvpPopup: true,
 
     // 갤러리: v4/assets/gallery/ 안의 파일명을 넘겨 볼 순서대로 적습니다.
     gallery: ["01.webp", "02.webp", "03.webp", "04.webp", "05.webp", "11.webp", "12.webp", "06.webp", "07.webp", "08.webp", "09.webp", "10.webp", "13.webp", "14.webp", "15.webp", "16.webp", "17.webp", "18.webp"],

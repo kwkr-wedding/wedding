@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>청첩장 링크 만들기</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#34473b">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%2334473b'/><text x='32' y='42' font-size='26' text-anchor='middle' fill='%23f7f5ef' font-family='serif'>K&amp;K</text></svg>">
+<style>
+@font-face{font-family:"Cinzel";src:url(../assets/fonts/cinzel-latin-400-normal.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"EB Garamond";src:url(../assets/fonts/eb-garamond-latin-400-normal.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Nanum Myeongjo";src:url(../assets/fonts/nanum-myeongjo-latin-400-normal.woff2) format("woff2");font-weight:400;font-display:swap;unicode-range:U+0000-00FF,U+2000-206F}
+@font-face{font-family:"Nanum Myeongjo";src:url(../assets/fonts/nanum-myeongjo-korean-400-normal.woff2) format("woff2");font-weight:400;font-display:swap;unicode-range:U+1100-11FF,U+3000-303F,U+3130-318F,U+AC00-D7AF,U+FF00-FFEF}
+@font-face{font-family:"Nanum Myeongjo";src:url(../assets/fonts/nanum-myeongjo-korean-700-normal.woff2) format("woff2");font-weight:700;font-display:swap;unicode-range:U+1100-11FF,U+3000-303F,U+3130-318F,U+AC00-D7AF,U+FF00-FFEF}
+:root{--green:#34473b;--green-d:#26342b;--green-m:#5d7264;--green-l:#9fb0a4;--paper:#f7f5ef;--card:#fffefb;--ink:#2b2b27;--sub:#7b7a70;--line:#e0ddd0;--line-d:#cfccbd;
+  --caps:"Cinzel","EB Garamond",serif;--serif-en:"EB Garamond",Garamond,serif;--serif-ko:"Nanum Myeongjo","Noto Serif KR",serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--serif-ko);font-size:15px;line-height:1.8;word-break:keep-all;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+a{color:inherit}
+[hidden]{display:none!important}
+.wrap{max-width:900px;margin:0 auto;padding:calc(44px + env(safe-area-inset-top)) 22px calc(60px + env(safe-area-inset-bottom))}
+header{text-align:center;margin-bottom:34px}
+.label{font-family:var(--caps);font-size:11px;letter-spacing:.36em;text-indent:.36em;color:var(--green-l);margin-bottom:6px}
+h1{font-size:22px;font-weight:400;letter-spacing:.06em;color:var(--green)}
+header p.sub{font-size:14px;color:var(--sub);margin-top:8px}
+.cols{display:grid;gap:34px}
+@media (min-width:780px){.cols{grid-template-columns:minmax(0,1fr) 320px;align-items:start;gap:48px}.preview{position:sticky;top:28px}}
+h2{font-size:13px;font-weight:700;color:var(--green-m);letter-spacing:.04em;margin:0 0 10px}
+.step+.step{margin-top:30px}
+
+/* 버전 선택 */
+.versions{display:grid;gap:10px}
+.ver{position:relative;display:block;cursor:pointer}
+.ver input{position:absolute;opacity:0;pointer-events:none}
+.ver .box{display:grid;grid-template-columns:54px 1fr;gap:14px;align-items:center;padding:16px 18px;background:var(--card);border-radius:12px;box-shadow:0 0 0 1px var(--line-d);transition:box-shadow .2s,background .2s}
+.ver .no{width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--caps);font-size:17px;letter-spacing:.04em;color:var(--green);box-shadow:inset 0 0 0 1px var(--line-d);transition:background .2s,color .2s}
+.ver b{display:block;font-size:16px;font-weight:700;letter-spacing:.02em}
+.ver span.desc{display:block;font-size:13px;color:var(--sub);line-height:1.6;margin-top:2px}
+.ver em{font-style:normal;font-size:11px;font-weight:400;color:var(--green-m);border:1px solid var(--green-l);border-radius:20px;padding:1px 8px;margin-left:8px;vertical-align:2px;white-space:nowrap}
+.ver input:checked+.box{box-shadow:0 0 0 2px var(--green);background:#fff}
+.ver input:checked+.box .no{background:var(--green);color:#f4f3ec;box-shadow:none}
+.ver input:focus-visible+.box{outline:2px solid var(--green-l);outline-offset:3px}
+
+/* 링크 */
+.linkbox{background:var(--card);border-radius:12px;box-shadow:0 0 0 1px var(--line-d);padding:16px 18px}
+.url{display:block;width:100%;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13.5px;line-height:1.6;color:var(--green-d);background:#f1efe6;border:0;border-radius:8px;padding:12px 14px;overflow-wrap:anywhere;word-break:break-all;-webkit-user-select:all;user-select:all}
+.btns{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:8px;margin-top:12px}
+.btns.two{grid-template-columns:1.4fr 1fr}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 12px;border-radius:10px;font-size:14px;text-decoration:none;white-space:nowrap;transition:background .2s,transform .15s}
+.btn:active{transform:scale(.98)}
+.btn.solid{background:var(--green);color:#f4f3ec}
+.btn.line{border:1px solid var(--line-d);background:#fff;color:var(--green)}
+.note{font-size:12.5px;color:var(--sub);line-height:1.7;margin-top:12px}
+.base{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line-d);font-size:13px;color:var(--sub);line-height:1.7}
+.base code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;color:var(--green-d);overflow-wrap:anywhere;word-break:break-all}
+.base button{font-size:12px;color:var(--green-m);border-bottom:1px solid var(--green-l);margin-left:6px}
+
+/* 미리보기 */
+.preview{text-align:center}
+.phone{--w:300px;width:var(--w);height:calc(var(--w) * 844 / 390);margin:0 auto;border-radius:34px;padding:9px;background:var(--green-d);box-shadow:0 24px 44px -22px rgba(20,30,24,.6)}
+.screen{position:relative;width:100%;height:100%;border-radius:26px;overflow:hidden;background:var(--green-d);isolation:isolate}
+.screen iframe{position:absolute;left:0;top:0;width:calc(100% / var(--s2));height:calc(100% / var(--s2));border:0;transform:scale(var(--s2));transform-origin:0 0}
+.preview .hint{font-size:12.5px;color:var(--sub);margin-top:14px}
+@media (max-width:340px){.phone{--w:264px}}
+
+.toast{position:fixed;left:50%;bottom:calc(32px + env(safe-area-inset-bottom));transform:translate(-50%,20px);z-index:9;background:rgba(30,40,33,.94);color:#f4f3ec;font-size:13px;padding:10px 18px;border-radius:20px;opacity:0;transition:.25s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="label">INVITATION LINK</p>
+    <h1>청첩장 링크 만들기</h1>
+    <p class="sub">보낼 버전을 고르면 그 버전으로 열리는 링크가 만들어집니다.</p>
+  </header>
+
+  <div class="cols">
+    <div>
+      <section class="step">
+        <h2>1. 버전 선택</h2>
+        <div class="versions" id="versions" role="radiogroup" aria-label="청첩장 버전"></div>
+      </section>
+
+      <section class="step">
+        <h2>2. 링크</h2>
+        <div class="linkbox">
+          <output class="url" id="url" aria-live="polite"></output>
+          <div class="btns" id="btns">
+            <button class="btn solid" id="copyBtn">링크 복사</button>
+            <a class="btn line" id="openBtn" target="_blank" rel="noopener">열어보기</a>
+            <button class="btn line" id="shareBtn" hidden>공유하기</button>
+          </div>
+          <p class="note">받는 분은 선택한 버전만 보게 됩니다. 두 버전 모두 참석 회신과 방명록은 같은 시트에 모입니다.</p>
+          <p class="base" id="base"></p>
+        </div>
+      </section>
+    </div>
+
+    <aside class="preview">
+      <h2>미리보기</h2>
+      <div class="phone"><div class="screen" id="screen"><iframe id="frame" title="선택한 버전 미리보기"></iframe></div></div>
+      <p class="hint">화면을 눌러 봉투를 열고 직접 넘겨볼 수 있습니다.</p>
+    </aside>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="../config.js?v=202611170002"></script>
+<script>
+(() => {
+  const C = window.WEDDING || {};
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const versions = C.versions && C.versions.length ? C.versions : [{ id: 1, name: "V1" }, { id: 2, name: "V2" }];
+  const def = String(C.defaultVersion || versions[0].id);
+  // 공유용 주소는 config.js 의 siteUrl 기준, 없으면 지금 열려 있는 주소 기준
+  const site = C.siteUrl || new URL("../", location.href).href;
+  const linkOf = id => `${site}v${id}/`;
+
+  let tt;
+  const toast = msg => { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(tt); tt = setTimeout(() => t.classList.remove("show"), 1800); };
+  const copy = async (text, msg) => {
+    try { await navigator.clipboard.writeText(text); }
+    catch { const ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); }
+    toast(msg);
+  };
+
+  $("#versions").innerHTML = versions.map(v => `
+    <label class="ver"><input type="radio" name="ver" value="${esc(v.id)}">
+      <span class="box"><span class="no">V${esc(v.id)}</span>
+      <span><b>${esc(v.name || "V" + v.id)}${String(v.id) === def ? "<em>기본</em>" : ""}</b>${v.desc ? `<span class="desc">${esc(v.desc)}</span>` : ""}</span></span></label>`).join("");
+
+  // 미리보기 화면 배율: 폰 화면(가로 390px 기준)을 틀 안에 맞춤
+  const screen = $("#screen");
+  const fit = () => screen.style.setProperty("--s2", screen.clientWidth / 390);
+  fit(); addEventListener("resize", fit);
+
+  let cur;
+  const select = id => {
+    id = String(id); if (!versions.some(v => String(v.id) === id)) id = def;
+    if (id === cur) return; cur = id;
+    document.querySelector(`input[name=ver][value="${id}"]`).checked = true;
+    $("#url").textContent = linkOf(id);
+    $("#openBtn").href = `../v${id}/`;
+    $("#frame").src = `../v${id}/`;
+    history.replaceState(null, "", `#v${id}`);
+  };
+  $("#versions").addEventListener("change", e => select(e.target.value));
+  $("#copyBtn").onclick = () => copy(linkOf(cur), `V${cur} 링크가 복사되었습니다`);
+  if (navigator.share) {
+    $("#shareBtn").hidden = false;
+    $("#shareBtn").onclick = () => navigator.share({ title: `${C.groom?.name || ""} ♥ ${C.bride?.name || ""} 결혼합니다`, url: linkOf(cur) }).catch(() => {});
+  } else $("#btns").classList.add("two");
+
+  $("#base").innerHTML = `버전을 붙이지 않은 기본 주소 <code>${esc(site)}</code> 는 지금 <b>V${esc(def)}</b> 버전으로 연결됩니다.<button id="copyBase">복사</button><br>기본 버전은 <code>config.js</code> 의 <code>defaultVersion</code> 에서 바꿉니다.`;
+  $("#copyBase").onclick = () => copy(site, "기본 주소가 복사되었습니다");
+
+  select((location.hash.match(/^#v(\w+)$/) || [])[1] || def);
+})();
+</script>
+</body>
+</html>

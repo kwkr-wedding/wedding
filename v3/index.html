@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>김경원 ♥ 최규로 결혼합니다</title>
+<meta name="description" content="2027년 1월 23일 토요일 오후 6시, 웨스틴 조선 서울 1층 그랜드볼룸">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#34473b">
+<!-- 링크 미리보기 (카카오톡·문자). 배포 주소가 바뀌면 og:url / og:image 도 같이 바꿔주세요 -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="김경원 ♥ 최규로 결혼합니다">
+<meta property="og:description" content="2027년 1월 23일 토요일 오후 6시 · 웨스틴 조선 서울 1층 그랜드볼룸">
+<meta property="og:url" content="https://kwkr-wedding.github.io/wedding/v3/">
+<meta property="og:image" content="https://kwkr-wedding.github.io/wedding/assets/og-v2.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%2334473b'/><text x='32' y='42' font-size='26' text-anchor='middle' fill='%23f7f5ef' font-family='serif'>K&amp;K</text></svg>">
+<link rel="stylesheet" href="style.css?v=202611160001">
+</head>
+<body>
+
+<!-- ───────── 봉투 인트로 ───────── -->
+<div id="envelope" class="env" role="button" tabindex="0" aria-label="청첩장 열기">
+  <svg class="env-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0,100 L39,62 M100,100 L61,62"/>
+  </svg>
+  <div class="env-flap" aria-hidden="true"><div class="env-flap-in"></div></div>
+  <div class="env-text">
+    <p class="env-small">THE WEDDING OF</p>
+    <h1 class="env-names"><span data-bind="groomEn">KYUNGWON</span> &amp; <span data-bind="brideEn">KYURO</span></h1>
+  </div>
+  <div class="env-seal" aria-hidden="true">
+    <span class="mono" id="sealMono">K<i>&amp;</i>K</span>
+    <small id="sealDate">2027.01.23</small>
+  </div>
+  <p class="env-hint">TOUCH TO OPEN</p>
+</div>
+
+<main id="app">
+
+  <!-- 첫 화면 -->
+  <header class="cover" id="top">
+    <p class="cv-date" id="cvDate" aria-hidden="true"></p>
+    <p class="cv-dow" id="cvDow"></p>
+    <div class="cv-photo" id="cvPhoto" hidden><img id="cvImg" alt="김경원, 최규로" draggable="false"></div>
+    <h1 class="cv-names"><span data-bind="groomName"></span><i>·</i><span data-bind="brideName"></span></h1>
+    <p class="cv-when" id="cvWhen"></p>
+    <p class="cv-where"><span data-bind="venueName"></span> <span data-bind="venueHall"></span></p>
+  </header>
+
+  <!-- 인쇄 청첩장 카드 (전면) -->
+  <section class="band rv">
+    <div class="pcard">
+      <img class="pavilion" src="../assets/pavilion.png" alt="웨스틴 조선 서울 황궁우 일러스트" width="1100" height="696" loading="lazy">
+      <p class="pc-script">With great pleasure,<br>we cordially invite you to our wedding</p>
+      <p class="pc-en pc-date" id="pcDate"></p>
+      <p class="pc-en" id="pcDow"></p>
+      <p class="pc-en pc-venue"><span data-bind="venueEn"></span><br><span data-bind="hallEn"></span></p>
+    </div>
+  </section>
+
+  <!-- 초대 글 -->
+  <section class="sec" id="invitation">
+    <p class="label rv">INVITATION</p>
+    <h2 class="title rv">소중한 분들을 초대합니다</h2>
+    <div class="greeting rv" id="greeting"></div>
+    <span class="rule rv"></span>
+    <div class="parents rv" id="parents"></div>
+    <button class="btn line rv" id="contactBtn" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h3l1.5 4-2 1.5a11 11 0 0 0 6 6l1.5-2 4 1.5v3a2 2 0 0 1-2 2A15.5 15.5 0 0 1 4.500 5.5a2 2 0 0 1 2-2z"/></svg>연락하기</button>
+  </section>
+
+  <!-- 두 사람 소개 (config.js 의 v3.profiles) -->
+  <section class="sec" id="profileSec" hidden>
+    <p class="label rv">PROFILE</p>
+    <h2 class="title rv">두 사람을 소개합니다</h2>
+    <div class="profiles" id="profiles"></div>
+  </section>
+
+  <!-- 캘린더 · D-day -->
+  <section class="sec" id="calendarSec">
+    <p class="cal-date rv" id="calTitle"></p>
+    <p class="cal-sub rv" id="calSub"></p>
+    <div class="calendar rv" id="calendar"></div>
+    <div class="countdown rv" id="countdown" aria-hidden="true">
+      <div><span>DAYS</span><b id="cdD">0</b></div><i>:</i>
+      <div><span>HOUR</span><b id="cdH">0</b></div><i>:</i>
+      <div><span>MIN</span><b id="cdM">0</b></div><i>:</i>
+      <div><span>SEC</span><b id="cdS">0</b></div>
+    </div>
+    <p class="dday-text rv" id="ddayText"></p>
+    <div class="together rv" id="together" hidden>
+      <p class="tg-label">함께 보낸 소중한 날</p>
+      <p class="tg-num"><i>+</i><b id="tgDays">0</b><span>일</span></p>
+    </div>
+    <div class="btn-row rv">
+      <a class="btn line small" id="gcalBtn" target="_blank" rel="noopener">구글 캘린더에 추가</a>
+      <button class="btn line small" id="icsBtn">휴대폰 캘린더에 추가</button>
+    </div>
+  </section>
+
+  <!-- 우리 이야기 (config.js 의 v3.story) -->
+  <section class="sec" id="storySec" hidden>
+    <p class="label rv">OUR STORY</p>
+    <h2 class="title rv">우리가 걸어온 시간</h2>
+    <div class="st-photo rv" id="stPhoto" hidden><img id="stImg" alt="" loading="lazy" draggable="false"></div>
+    <div class="st-bar rv">
+      <p class="st-script" aria-hidden="true">Our story</p>
+      <button class="st-go" id="storyOpen">이야기 시작하기<i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></button>
+    </div>
+  </section>
+
+  <!-- 인터뷰 (config.js 의 v3.interview) -->
+  <section class="sec" id="interviewSec" hidden>
+    <p class="label rv">INTERVIEW</p>
+    <h2 class="title rv">우리 두 사람의 이야기</h2>
+    <p class="body-text rv">결혼을 앞두고 저희 두 사람의<br>인터뷰를 준비했습니다.</p>
+    <button class="btn line rv" id="interviewOpen">신랑 &amp; 신부의 인터뷰 읽어보기</button>
+  </section>
+
+  <!-- 날짜 배너 + 사진 -->
+  <section class="banner" id="bannerSec">
+    <div class="bn-rows rv" id="bnRows"></div>
+    <div class="bn-photo rv" id="bnPhoto" hidden><img id="bnImg" alt="" loading="lazy" draggable="false"></div>
+  </section>
+
+  <!-- 오시는 길 -->
+  <section class="sec" id="location">
+    <p class="label rv">LOCATION</p>
+    <h2 class="title rv">오시는 길</h2>
+    <p class="loc-name rv"><span data-bind="venueName"></span> <span data-bind="venueHall"></span></p>
+    <p class="loc-addr rv"><span data-bind="address"></span>
+      <button class="link-btn" data-copy-key="address">복사</button></p>
+    <p class="loc-tel rv"><a id="venueTel" class="plain"></a></p>
+    <div class="map rv"><iframe id="mapFrame" title="지도" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+    <button class="btn line wide rv" id="mapImgBtn" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.500 6.500 9 4l6 2.500L20.500 4v13.500L15 20l-6-2.500L3.500 20zM9 4v13.500M15 6.500V20"/></svg>약도 이미지 보기</button>
+    <div class="nav rv">
+      <h4>내비게이션</h4>
+      <p>원하시는 앱을 선택하시면 길안내가 시작됩니다.</p>
+      <div class="nav-btns">
+        <a id="navNaver" target="_blank" rel="noopener"><i class="dot naver"></i>네이버지도</a>
+        <a id="navTmap"><i class="dot tmap"></i>티맵</a>
+        <a id="navKakao" target="_blank" rel="noopener"><i class="dot kakao"></i>카카오맵</a>
+      </div>
+    </div>
+    <div class="transport rv" id="transport"></div>
+  </section>
+
+  <!-- 안내 사항 (config.js 의 v3.notices) -->
+  <section class="sec" id="noticeSec" hidden>
+    <p class="label rv">NOTICE</p>
+    <h2 class="title rv">안내 말씀</h2>
+    <div class="notices" id="notices"></div>
+  </section>
+
+  <!-- 갤러리 -->
+  <section class="sec" id="gallerySec" hidden>
+    <p class="label rv">GALLERY</p>
+    <h2 class="title rv">웨딩 갤러리</h2>
+    <div class="g-grid" id="gGrid"></div>
+  </section>
+
+  <!-- 방명록 -->
+  <section class="sec" id="guestbookSec" hidden>
+    <p class="label rv">GUESTBOOK</p>
+    <h2 class="title rv">방명록</h2>
+    <div class="gb-track rv" id="gbTrack"><p class="muted center gb-loading">불러오는 중…</p></div>
+    <div class="gb-actions rv">
+      <button class="text-btn" id="gbOpen">작성하기</button>
+      <button class="text-btn" id="gbAll" hidden>전체보기</button>
+    </div>
+  </section>
+
+  <!-- 마음 전하실 곳 -->
+  <section class="sec" id="accountsSec">
+    <p class="label rv">ACCOUNT</p>
+    <h2 class="title rv">마음 전하실 곳</h2>
+    <p class="body-text rv">참석이 어려우신 분들을 위해<br>계좌번호를 기재하였습니다.<br>너그러운 마음으로 양해 부탁드립니다.</p>
+    <div class="rv" id="accounts"></div>
+  </section>
+
+  <!-- 참석 의사 -->
+  <section class="sec" id="rsvp">
+    <p class="label rv">R.S.V.P.</p>
+    <h2 class="title rv">참석 의사 전달</h2>
+    <p class="body-text rv">축하의 마음으로 참석해주시는 모든 분들을<br>귀하게 모실 수 있도록, 참석 여부를 알려주세요.</p>
+    <p class="body-text muted rv" id="rsvpDeadline"></p>
+    <button class="btn solid rv" id="rsvpOpen">참석 의사 전달하기</button>
+  </section>
+
+  <!-- 축하 사진 공유 (config.js 의 v3.photoShare) -->
+  <section class="sec" id="photoSec" hidden>
+    <div class="ph-stack rv" id="phStack" aria-hidden="true"></div>
+    <p class="label rv">SHARE THE DAY</p>
+    <h2 class="title rv">축하 사진 공유</h2>
+    <p class="body-text rv">예식 당일 담아주신 두 사람의 순간을 보내주세요.<br>오래 간직할 선물이 됩니다.</p>
+    <button class="btn line rv" id="photoBtn" disabled>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.500h3l1.500-2h7l1.500 2h3v10H4z"/><circle cx="12" cy="13" r="3.200"/></svg>사진 업로드</button>
+    <input type="file" id="photoInput" accept="image/*" multiple hidden>
+    <p class="body-text muted rv" id="photoNote"></p>
+  </section>
+
+  <!-- 사진 액자 (config.js 의 v3.frames) -->
+  <section class="frames" id="framesSec" hidden></section>
+
+  <!-- 마무리 -->
+  <section class="ending" id="endingSec">
+    <p class="end-script rv" aria-hidden="true">Save the Date</p>
+    <dl class="end-table rv">
+      <div><dt>DATE</dt><dd id="endDate"></dd></div>
+      <div><dt>TIME</dt><dd id="endTime"></dd></div>
+      <div class="full"><dt>PLACE</dt><dd><span data-bind="venueName"></span> <span data-bind="venueHall"></span></dd></div>
+    </dl>
+    <div class="end-photo" id="endPhoto" hidden>
+      <img id="endImg" alt="" loading="lazy" draggable="false">
+      <div class="end-text" id="endText"></div>
+    </div>
+  </section>
+
+  <!-- 공유 -->
+  <section class="share">
+    <div class="btn-col">
+      <button class="btn kakao" id="kakaoShare" hidden>카카오톡으로 초대장 보내기</button>
+      <button class="btn line" id="nativeShare" hidden>공유하기</button>
+      <button class="btn line" id="copyLink">링크 복사</button>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p class="en"><span data-bind="groomEn"></span> &amp; <span data-bind="brideEn"></span></p>
+    <p class="en small" id="footDate"></p>
+  </footer>
+</main>
+
+<!-- 떠 있는 버튼: 배경음악 · 바로가기 -->
+<button id="bgmBtn" class="bgm" hidden aria-label="배경음악 켜기/끄기"><span></span><span></span><span></span></button>
+<audio id="bgm" loop preload="none"></audio>
+<button id="menuBtn" class="fab" aria-label="바로가기 메뉴">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M4 12h7M4 17h10"/><circle cx="17.500" cy="12" r="3"/><path d="M19.700 14.200 22 16.500"/></svg>
+</button>
+
+<!-- 눈 -->
+<canvas id="snow" aria-hidden="true"></canvas>
+
+<!-- 모달: 바로가기 -->
+<div class="modal" id="menuModal" hidden>
+  <div class="sheet">
+    <button class="close" data-close aria-label="닫기">&times;</button>
+    <p class="label">CONTENTS</p>
+    <nav class="menu-list" id="menuList"></nav>
+  </div>
+</div>
+
+<!-- 모달: 연락하기 -->
+<div class="modal" id="contactModal" hidden>
+  <div class="sheet">
+    <button class="close" data-close aria-label="닫기">&times;</button>
+    <p class="label">CONTACT</p>
+    <div id="contactList" class="contact-list"></div>
+  </div>
+</div>
+
+<!-- 모달: 인터뷰 -->
+<div class="modal" id="interviewModal" hidden>
+  <div class="sheet">
+    <button class="close" data-close aria-label="닫기">&times;</button>
+    <p class="label">INTERVIEW</p>
+    <h3 class="title sm">우리 두 사람의 이야기</h3>
+    <div class="qa-list" id="qaList"></div>
+  </div>
+</div>
+
+<!-- 모달: RSVP -->
+<div class="modal" id="rsvpModal" hidden>
+  <div class="sheet">
+    <button class="close" data-close aria-label="닫기">&times;</button>
+    <p class="label">R.S.V.P.</p>
+    <h3 class="title sm">참석 의사 전달</h3>
+    <form id="rsvpForm" autocomplete="on">
+      <div class="field">
+        <span class="f-label">구분</span>
+        <div class="seg">
+          <input type="radio" name="side" id="sideG" value="신랑측" checked><label for="sideG">신랑측</label>
+          <input type="radio" name="side" id="sideB" value="신부측"><label for="sideB">신부측</label>
+        </div>
+      </div>
+      <div class="field">
+        <span class="f-label">참석 여부</span>
+        <div class="seg">
+          <input type="radio" name="attend" id="attY" value="참석" checked><label for="attY">참석할게요</label>
+          <input type="radio" name="attend" id="attN" value="불참"><label for="attN">참석이 어려워요</label>
+        </div>
+      </div>
+      <label class="field"><span class="f-label">성함</span>
+        <input name="name" required maxlength="20" placeholder="성함을 입력해주세요"></label>
+      <label class="field"><span class="f-label">연락처 <em>(선택)</em></span>
+        <input name="phone" type="tel" inputmode="tel" maxlength="20" placeholder="010-0000-0000"></label>
+      <div class="attend-only">
+        <div class="field">
+          <span class="f-label">식사 여부</span>
+          <div class="seg three">
+            <input type="radio" name="meal" id="mealY" value="예정" checked><label for="mealY">예정</label>
+            <input type="radio" name="meal" id="mealN" value="안 함"><label for="mealN">안 함</label>
+            <input type="radio" name="meal" id="mealU" value="미정"><label for="mealU">미정</label>
+          </div>
+        </div>
+      </div>
+      <label class="field"><span class="f-label">전하실 말씀 <em>(선택)</em></span>
+        <textarea name="note" rows="2" maxlength="200"></textarea></label>
+      <p class="form-note">이미 회신하셨어도 같은 성함·같은 구분(신랑측/신부측)으로 다시 보내시면 최신 내용으로 변경됩니다.</p>
+      <label class="agree"><input type="checkbox" required> 참석 여부 확인을 위한 개인정보 수집·이용에 동의합니다.</label>
+      <button class="btn solid wide" type="submit">전달하기</button>
+    </form>
+  </div>
+</div>
+
+<!-- 모달: 방명록 작성 -->
+<div class="modal" id="gbModal" hidden>
+  <div class="sheet">
+    <button class="close" data-close aria-label="닫기">&times;</button>
+    <p class="label">GUESTBOOK</p>
+    <h3 class="title sm">축하 메시지 남기기</h3>
+    <form id="gbForm">
+      <label class="field"><span class="f-label">이름</span><input name="name" required maxlength="20"></label>
+      <label class="field"><span class="f-label">메시지</span><textarea name="message" rows="4" required maxlength="300"></textarea></label>
+      <button class="btn solid wide" type="submit">남기기</button>
+    </form>
+  </div>
+</div>
+
+<!-- 모달: 방명록 전체보기 -->
+<div class="modal" id="gbAllModal" hidden>
+  <div class="sheet">
+    <button class="close" data-close aria-label="닫기">&times;</button>
+    <p class="label">GUESTBOOK</p>
+    <h3 class="title sm">방명록</h3>
+    <div class="gb-list" id="gbList"></div>
+  </div>
+</div>
+
+<!-- 모달: 우리 이야기 -->
+<div class="modal" id="storyModal" hidden>
+  <div class="sheet tall">
+    <button class="close" data-close aria-label="닫기">&times;</button>
+    <p class="label">OUR STORY</p>
+    <h3 class="title sm">우리가 걸어온 시간</h3>
+    <ol class="tl" id="storyList"></ol>
+  </div>
+</div>
+
+<!-- 모달: 약도 -->
+<div class="modal" id="mapImgModal" hidden>
+  <div class="sheet">
+    <button class="close" data-close aria-label="닫기">&times;</button>
+    <p class="label">MAP</p>
+    <h3 class="title sm">약도</h3>
+    <img id="mapImg" class="map-img" alt="예식장 약도">
+  </div>
+</div>
+
+<!-- 접속 시 뜨는 참석 의사 안내 -->
+<div class="modal center" id="rsvpIntro" hidden>
+  <div class="sheet pop" role="dialog" aria-labelledby="rsvpIntroTitle">
+    <button class="close" data-close aria-label="닫기">&times;</button>
+    <p class="label">R.S.V.P.</p>
+    <h3 class="title sm" id="rsvpIntroTitle">참석 의사 전달</h3>
+    <p class="body-text">축하의 마음으로 참석해주시는 모든 분들을<br>귀하게 모실 수 있도록, 참석 여부를 알려주세요.</p>
+    <dl class="pop-info">
+      <div><dt>신랑 · 신부</dt><dd><span data-bind="groomName"></span> · <span data-bind="brideName"></span></dd></div>
+      <div><dt>일시</dt><dd id="popWhen"></dd></div>
+      <div><dt>장소</dt><dd><span data-bind="venueName"></span> <span data-bind="venueHall"></span></dd></div>
+    </dl>
+    <button class="btn solid wide" id="rsvpIntroGo">참석 의사 전달하기</button>
+    <button class="text-btn pop-skip" id="rsvpIntroSkip">오늘 하루 보지 않기</button>
+  </div>
+</div>
+
+<!-- 사진 크게 보기 -->
+<div class="lightbox" id="lightbox" hidden>
+  <button class="lb-close" id="lbClose" aria-label="닫기">&times;</button>
+  <div class="lb-track" id="lbTrack"></div>
+  <p class="lb-count"><span id="lbCur">1</span> / <span id="lbTotal"></span></p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="../config.js?v=202611170002"></script>
+<script src="app.js?v=202611160001"></script>
+</body>
+</html>

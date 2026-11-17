@@ -261,6 +261,7 @@
   // 화면을 정해진 위치까지 부드럽게 내립니다. 그사이 화면을 만지면 멈춥니다
   const glideTo = (y, ms) => {
     if (RM) return window.scrollTo(0, y);
+    smoothStop();
     const y0 = scrollY, t0 = performance.now(); let stop = false;
     const halt = () => { stop = true; };
     ["touchstart", "wheel", "keydown"].forEach(t => addEventListener(t, halt, { once: true, passive: true }));
@@ -272,6 +273,64 @@
     };
     requestAnimationFrame(step);
   };
+  /* ---------- 부드러운 스크롤 ----------
+   * 휠을 세게 굴리거나 손가락으로 훽 튕겨도 화면이 목표 지점까지 천천히 미끄러지듯 따라갑니다.
+   * 손가락으로 끄는 동안에는 손을 바짝 따라오고, 손을 뗀 뒤의 관성은 짧게(최대 화면 높이의 0.9배) 줄이고 느긋하게 멈춥니다.
+   * 동작 줄이기, 참석 의사 창·크게 보기가 열려 있을 때, 두 손가락(확대) 중, 화면을 확대한 상태, 가로로 넘기는 갤러리에서는 쓰지 않습니다. */
+  let smoothRaf = 0;
+  function smoothStop() { if (smoothRaf) cancelAnimationFrame(smoothRaf); smoothRaf = 0; }
+  if (!RM) {
+    const root = document.documentElement, vvp = window.visualViewport;
+    const WHEEL = .55, FLING_MS = 300, FLING_MAX = .9, TAU_DRAG = .07, TAU_FREE = .42;
+    let target = scrollY, cur = scrollY, last = 0, tau = TAU_FREE, dragging = false;
+    const maxY = () => root.scrollHeight - innerHeight;
+    const blocked = () => holdY != null || root.classList.contains("hold") || document.body.classList.contains("locked") || (vvp && vvp.scale > 1.01);
+    const run = now => {
+      if (blocked()) { smoothRaf = 0; return; }
+      const dt = Math.min(.05, (now - last) / 1000 || .016); last = now;
+      target = clamp(target, 0, maxY());
+      cur += (target - cur) * (1 - Math.exp(-dt / tau));
+      if (Math.abs(target - cur) < .35) cur = target;
+      window.scrollTo(0, cur);
+      smoothRaf = cur !== target || dragging ? requestAnimationFrame(run) : 0;
+    };
+    const kick = () => { if (!smoothRaf) { last = performance.now(); smoothRaf = requestAnimationFrame(run); } };
+    const fresh = () => { if (!smoothRaf) target = cur = scrollY; };
+    addEventListener("wheel", e => {
+      if (e.ctrlKey || e.defaultPrevented || blocked() || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      e.preventDefault(); fresh();
+      const d = e.deltaY * (e.deltaMode === 1 ? 32 : e.deltaMode === 2 ? innerHeight : 1);
+      tau = TAU_FREE; target = clamp(target + d * WHEEL, 0, maxY()); kick();
+    }, { passive: false });
+    let ty = null, tx = 0, mode = null, samples = [];
+    addEventListener("touchstart", e => {
+      if (e.touches.length !== 1 || blocked()) { ty = null; return; }
+      const t = e.touches[0]; ty = t.clientY; tx = t.clientX; mode = null; samples = [[performance.now(), ty]];
+      if (smoothRaf) target = cur; else fresh();   // 미끄러지는 중에 닿으면 그 자리에 멈춥니다
+    }, { passive: true });
+    addEventListener("touchmove", e => {
+      if (ty == null || e.touches.length !== 1 || blocked()) { ty = null; return; }
+      const t = e.touches[0], dx = t.clientX - tx, dy = t.clientY - ty;
+      if (!mode) { if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return; mode = Math.abs(dy) >= Math.abs(dx) ? "y" : "x"; }
+      if (mode !== "y") return;
+      e.preventDefault();
+      dragging = true; tau = TAU_DRAG;
+      target = clamp(target - dy, 0, maxY()); ty = t.clientY; tx = t.clientX;
+      samples.push([performance.now(), ty]); if (samples.length > 5) samples.shift();
+      kick();
+    }, { passive: false });
+    const release = () => {
+      if (mode === "y" && dragging) {
+        const [t0, y0] = samples[0], [t1, y1] = samples[samples.length - 1];
+        const v = performance.now() - t1 < 90 ? (y1 - y0) / Math.max(16, t1 - t0) : 0;   // px/ms
+        const fling = clamp(-v * FLING_MS, -FLING_MAX * innerHeight, FLING_MAX * innerHeight);
+        target = clamp(target + fling, 0, maxY());
+      }
+      dragging = false; tau = TAU_FREE; ty = null; mode = null; kick();
+    };
+    addEventListener("touchend", release, { passive: true });
+    addEventListener("touchcancel", release, { passive: true });
+  }
   let cueT = 0;
   const afterIntro = () => {
     const cue = $("#cue");
@@ -309,7 +368,7 @@
   $("#quick").addEventListener("click", e => {
     const a = e.target.closest("a"); if (!a) return;
     e.preventDefault();
-    $(a.getAttribute("href")).scrollIntoView({ behavior: RM ? "auto" : "smooth", block: "start" });
+    smoothStop(); $(a.getAttribute("href")).scrollIntoView({ behavior: RM ? "auto" : "smooth", block: "start" });
   });
 
   /* ---------- 차례로 나타나기 ---------- */
@@ -514,17 +573,17 @@
       T(heroText, `${(-p * 150).toFixed(1)}px`); heroText.style.opacity = 1 - seg(p, .35, .95);
       hint.style.opacity = 1 - seg(p, 0, .15);
     }
-    // 장면 1 · 앨범: 어린 신랑(2003) → 어린 신부(1997) → 두 사람의 이야기 여섯 장면 → 프러포즈 그림
+    // 장면 1 · 앨범: 어린 신부(1997) → 어린 신랑(2003) → 두 사람의 이야기 여섯 장면 → 프러포즈 그림 (시간 순서)
     if (near(s1, 1.5)) { jump.load(); brideCam.load(); }
     if (near(s1, .2)) {
       const p = pinP(s1, 1);
       s1Line.style.opacity = seg(p, 0, .02); T(s1Line, `${(18 * (1 - ease(seg(p, 0, .025)))).toFixed(1)}px`);
-      dropIn(prA, seg(p, .005, .025), -2.5, 7); jump.draw(seg(p, .025, .13));
-      dropIn(prB, seg(p, .14, .16), 2.2, -7); brideCam.draw(seg(p, .16, .265));
-      dropIn(prB2, seg(p, .2, .22), 5, -8);
+      dropIn(prB, seg(p, .005, .025), 2.2, -7); brideCam.draw(seg(p, .025, .13));
+      dropIn(prB2, seg(p, .07, .09), 5, -8);
+      dropIn(prA, seg(p, .14, .16), -2.5, 7); jump.draw(seg(p, .16, .265));
       const realOff = 1 - seg(p, stAt(1) + .03, stAt(1) + .06);   // 이야기 두 번째 장이 놓이면 옛 사진·영상은 물러납니다
       if (realOff < 1) [prA, prB, prB2].forEach(f => f.style.opacity = Math.min(+f.style.opacity, realOff));
-      const capOff = 1 - seg(p, ST0, ST0 + .02); capA.style.opacity = capOff; capB.style.opacity = capOff;
+      const capOff = 1 - seg(p, ST0, ST0 + .02); capA.style.opacity = capOff; capB.style.opacity = 1 - seg(p, .14, .155);
       tvNote.style.opacity = seg(p, .02, .04) * (1 - seg(p, .125, .14));
       noteB.style.opacity = seg(p, .15, .17) * (1 - seg(p, ST0 - .012, ST0 + .005));
       const at7 = stAt(story.length);

@@ -513,8 +513,8 @@
     $(boxSel).appendChild(cv);
     return new Seq(cv, i => `${conf.base || "../v4/assets/"}${conf.dir}/${String(i).padStart(3, "0")}.webp${conf.v ? "?v=" + conf.v : ""}`, conf.count, true);
   };
-  // 프러포즈 영상은 V8 전용: 4K 원본 사진에서 다시 만든 1080×1920 프레임
-  const seqPropose = coverSeq("#shotPropose", { base: "media/", dir: "seq-propose", count: 113, v: 1 }), seqDoor = coverSeq("#shotDoor", V.sequences.door);
+  // 프러포즈 영상은 V8 전용: V4 와 같은 영상(Kling std 720p)을 Topaz 로 4K 업스케일한 1080×1920 프레임
+  const seqPropose = coverSeq("#shotPropose", { base: "media/", dir: "seq-propose", count: 121, v: 2 }), seqDoor = coverSeq("#shotDoor", V.sequences.door);
   // 캔버스 크기는 화면 전체가 아니라 장면 칸에 맞춥니다 (큰 화면에서는 칸이 가운데 휴대폰 너비로 좁아집니다)
   const fitSeq = s => {
     if (!s) return;

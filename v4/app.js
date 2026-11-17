@@ -3,8 +3,8 @@
   // V4 설정: config.js 의 v4 에 적지 않은 항목은 아래 기본값을 씁니다
   const V = Object.assign({
     rsvpPopup: false,
-    gallery: ["01.webp", "02.webp", "03.webp", "04.webp", "05.webp", "06.webp", "07.webp", "08.webp", "09.webp", "10.webp"],
-    videos: {},      // { hero, night, laugh } : v4/assets/ 안의 mp4 파일명. 있으면 사진 위에 영상을 겹칩니다
+    gallery: ["01.webp", "02.webp", "03.webp", "04.webp", "05.webp", "11.webp", "12.webp", "06.webp", "07.webp", "08.webp", "09.webp", "10.webp", "13.webp", "14.webp", "15.webp", "16.webp", "17.webp", "18.webp"],
+    videos: {},      // { hero, night } : v4/assets/ 안의 mp4 파일명. 있으면 사진 위에 영상을 겹칩니다
     sequences: {},   // { propose: { dir, count }, door: { dir, count } } : 스크롤로 넘기는 프레임 묶음
   }, C.v4 || {});
   const $ = (s, el = document) => el.querySelector(s);
@@ -96,14 +96,13 @@
   /* ---------- 영상 (선택): config.js 의 v4.videos 에 파일명이 있으면 사진 위에 겹칩니다 ----------
    * 사진은 영상의 첫 장면과 같은 구도라서, 영상이 재생되기 시작하면 사진 위로 부드럽게 겹쳐집니다.
    * 근처에 왔을 때 불러오고, 화면에 보일 때만 재생합니다. 자동 재생이 막힌 기기에서는 사진이 그대로 보입니다.
-   *   opt.loop=false  한 번만 재생하고 마지막 장면에 멈춤 (opt.rewind: 화면에서 벗어나면 처음으로)
    *   opt.afterLoad   페이지의 다른 사진을 다 불러온 뒤에 불러오기 (첫 화면용)
    *   opt.nearEl      이 요소가 가까워지면 불러오기 (기본은 영상이 들어갈 칸) */
   const addVideo = (box, file, opt = {}) => {
     if (!file || RM || !box) return;
     const attach = () => {
       const v = document.createElement("video");
-      v.muted = true; v.defaultMuted = true; v.playsInline = true; v.loop = opt.loop !== false; v.preload = "auto";
+      v.muted = true; v.defaultMuted = true; v.playsInline = true; v.loop = true; v.preload = "auto";
       ["muted", "playsinline", "webkit-playsinline", "disablepictureinpicture"].forEach(a => v.setAttribute(a, ""));
       v.setAttribute("aria-hidden", "true"); v.className = "vid";
       v.addEventListener("playing", () => v.classList.add("on"));
@@ -111,8 +110,8 @@
       box.appendChild(v);
       new IntersectionObserver(es => es.forEach(e => {
         if (e.isIntersecting) { const pr = v.play(); if (pr) pr.catch(() => {}); }
-        else { v.pause(); if (opt.rewind) v.currentTime = 0; }
-      }), { threshold: opt.threshold || .05 }).observe(box);
+        else v.pause();
+      }), { threshold: .05 }).observe(box);
     };
     const whenNear = () => new IntersectionObserver((es, o) => { if (es.some(e => e.isIntersecting)) { o.disconnect(); attach(); } }, { rootMargin: "150% 0px" }).observe(opt.nearEl || box);
     if (opt.afterLoad && document.readyState !== "complete") addEventListener("load", () => setTimeout(whenNear, 300), { once: true });
@@ -124,12 +123,8 @@
   /* ---------- 갤러리 (가로로 넘기기) ---------- */
   const track = $("#gTrack");
   const items = V.gallery.map((f, i) => `<button class="g-item" data-src="assets/gallery/${esc(f)}" aria-label="사진 ${i + 1} 크게 보기"><img src="assets/gallery/${esc(f)}" alt="웨딩 사진 ${i + 1}" loading="lazy" draggable="false"></button>`);
-  // 눈을 맞추다 웃음이 터지는 두 컷은 한 칸에서 이어 보여 줍니다
-  items.splice(Math.min(5, items.length), 0, `<div class="g-item laugh" id="laugh"><img src="assets/gallery/laugh-a.webp" alt="마주 보는 두 사람" loading="lazy" draggable="false"><img class="b" src="assets/gallery/laugh-b.webp" alt="웃음이 터진 두 사람" loading="lazy" draggable="false"></div>`);
   track.innerHTML = items.join("");
   $("#gTotal").textContent = items.length;
-  // 웃음이 터지는 컷: 카드가 화면에 들어오면 한 번 재생하고, 웃는 장면에 멈춥니다
-  addVideo($("#laugh"), V.videos.laugh, { loop: false, rewind: true, threshold: .6, nearEl: $("#gallery") });
   const gItems = $$(".g-item", track);
   const gUpdate = () => {
     const tr = track.getBoundingClientRect(), mid = tr.left + tr.width / 2;
@@ -137,7 +132,7 @@
     gItems.forEach((el, i) => {
       const r = el.getBoundingClientRect(), off = (r.left + r.width / 2 - mid) / tr.width;
       if (Math.abs(off) < bd) { bd = Math.abs(off); best = i; }
-      if (!RM && Math.abs(off) < 1.5) $$("img,video", el).forEach(m => m.style.transform = `translate3d(${(-off * 7).toFixed(2)}%,0,0)`);
+      if (!RM && Math.abs(off) < 1.5) $$("img", el).forEach(m => m.style.transform = `translate3d(${(-off * 7).toFixed(2)}%,0,0)`);
     });
     $("#gCur").textContent = best + 1;
   };
@@ -147,6 +142,27 @@
   const closeLb = () => { lb.hidden = true; unlock(); };
   lb.addEventListener("click", closeLb);
   document.addEventListener("contextmenu", e => { if (e.target.closest("img,video,canvas")) e.preventDefault(); });
+
+  /* ---------- 사진 확대 막기 ----------
+   * 사진·영상이 있는 칸에서는 두 손가락 확대, 두 번 눌러 확대가 되지 않습니다 (style.css 의 touch-action 과 함께 동작).
+   * 글씨가 있는 카드에서는 확대할 수 있고, 그렇게 화면을 확대해도 갤러리 사진은 원래 크기로 보입니다. */
+  const PHOTO = ".pin,.garden,.person .ph,.g-track,.end-photo,.lightbox";
+  const onPhoto = e => e.target && e.target.closest && e.target.closest(PHOTO);
+  ["gesturestart", "gesturechange"].forEach(t => document.addEventListener(t, e => { if (onPhoto(e)) e.preventDefault(); }, { passive: false }));
+  document.addEventListener("wheel", e => { if (e.ctrlKey && onPhoto(e)) e.preventDefault(); }, { passive: false });
+  const gWrap = $("#gWrap"), vv = window.visualViewport;
+  if (vv) {
+    const fix = () => {
+      const z = vv.scale || 1;
+      if (z <= 1.01) { if (gWrap.style.transform) gWrap.style.transform = ""; return; }
+      const host = gWrap.parentElement.getBoundingClientRect(), W = gWrap.offsetWidth, Hh = gWrap.offsetHeight;
+      const ox = Math.min(W, Math.max(0, (vv.offsetLeft - host.left - gWrap.offsetLeft) / (1 - 1 / z)));
+      const oy = Math.min(Hh, Math.max(0, vv.offsetTop + vv.height / 2 - host.top - gWrap.offsetTop));
+      gWrap.style.transformOrigin = `${ox.toFixed(1)}px ${oy.toFixed(1)}px`;
+      gWrap.style.transform = `scale(${(1 / z).toFixed(4)})`;
+    };
+    vv.addEventListener("resize", fix); vv.addEventListener("scroll", fix);
+  }
 
   /* ---------- 마음 전하실 곳 ---------- */
   const accGroup = (title, list) => {
@@ -295,12 +311,20 @@
   const jump = new Seq($("#jump"), i => `assets/jump/${String(i).padStart(3, "0")}.webp`, 81, false);
   const coverSeq = (boxSel, conf) => {
     if (!conf || !conf.count || RM) return null;
-    const box = $(boxSel), cv = document.createElement("canvas");
-    cv.width = Math.min(1080, Math.round(vw * Math.min(2, devicePixelRatio || 1))); cv.height = Math.round(cv.width * vh / vw);
-    box.appendChild(cv);
+    const cv = document.createElement("canvas");
+    $(boxSel).appendChild(cv);
     return new Seq(cv, i => `assets/${conf.dir}/${String(i).padStart(3, "0")}.webp`, conf.count, true);
   };
   const seqPropose = coverSeq("#shotPropose", V.sequences.propose), seqDoor = coverSeq("#shotDoor", V.sequences.door);
+  // 캔버스 크기는 화면 전체가 아니라 장면 칸에 맞춥니다 (큰 화면에서는 칸이 가운데 휴대폰 너비로 좁아집니다)
+  const fitSeq = s => {
+    if (!s) return;
+    const r = s.canvas.parentElement.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    const k = Math.min(2, devicePixelRatio || 1, 1080 / r.width), w = Math.round(r.width * k), h = Math.round(r.height * k);
+    if (s.canvas.width === w && s.canvas.height === h) return;
+    s.canvas.width = w; s.canvas.height = h; s.last = ""; s.paint();
+  };
 
   /* 전구 줄 */
   const strands = [];
@@ -352,6 +376,7 @@
     const top = el => el.getBoundingClientRect().top + scrollY, bot = el => top(el) + el.offsetHeight;
     keys = [[top(s0), 900], [bot(s1) - vh, 960], [bot(s2) - vh, 1020], [bot(s3b) - vh, 1070], [top(s4) + SIX_AT * (s4.offsetHeight - vh), 1080]];
     buildLights();
+    fitSeq(seqPropose); fitSeq(seqDoor);
   };
   const timeAt = y => {
     if (y <= keys[0][0]) return keys[0][1];
@@ -427,7 +452,7 @@
   const req = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
   addEventListener("scroll", req, { passive: true });
   let rw = innerWidth;
-  addEventListener("resize", () => { if (innerWidth === rw && Math.abs(innerHeight - vh) < 140) { vh = innerHeight; return req(); } rw = innerWidth; layout(); req(); });
+  addEventListener("resize", () => { if (innerWidth === rw && Math.abs(innerHeight - vh) < 140) { vh = innerHeight; fitSeq(seqPropose); fitSeq(seqDoor); return req(); } rw = innerWidth; layout(); req(); });
   addEventListener("load", () => { layout(); req(); gUpdate(); });
   layout(); update(); gUpdate();
 })();

@@ -17,8 +17,8 @@
 <meta property="og:image:height" content="630">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23101613'/><text x='32' y='42' font-size='26' text-anchor='middle' fill='%23f2d08a' font-family='serif'>6:00</text></svg>">
 <link rel="preload" as="image" href="assets/hero.webp" fetchpriority="high">
-<link rel="stylesheet" href="fonts.css?v=202611170002">
-<link rel="stylesheet" href="style.css?v=202611170002">
+<link rel="stylesheet" href="fonts.css?v=202611170003">
+<link rel="stylesheet" href="style.css?v=202611170003">
 </head>
 <body>
 
@@ -148,8 +148,10 @@
   <section class="scene flow wide" id="gallery" data-bg="#101613" data-ink="light">
     <p class="label en rv">GALLERY</p>
     <h2 class="title rv">우리의 순간</h2>
-    <div class="g-track" id="gTrack"></div>
-    <p class="g-count en"><span id="gCur">1</span> / <span id="gTotal"></span></p>
+    <div class="g-wrap" id="gWrap">
+      <div class="g-track" id="gTrack"></div>
+      <p class="g-count en"><span id="gCur">1</span> / <span id="gTotal"></span></p>
+    </div>
   </section>
 
   <!-- 장면 7 · 마음 전하실 곳 · 참석 회신 -->
@@ -266,7 +268,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="../config.js?v=202611170002"></script>
-<script src="app.js?v=202611170002"></script>
+<script src="../config.js?v=202611170003"></script>
+<script src="app.js?v=202611170003"></script>
 </body>
 </html>

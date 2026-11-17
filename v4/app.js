@@ -12,6 +12,8 @@
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const QS = new URLSearchParams(location.search);
   const RM = matchMedia("(prefers-reduced-motion: reduce)").matches || QS.has("still");
+  // 신부측 링크(주소 끝 ?side=bride): 첫 화면은 신부 이름 먼저, 맨 아래는 신랑 이름 먼저. 나머지는 같습니다.
+  const BRIDE = QS.get("side") === "bride";
   if (RM) document.documentElement.classList.add("rm");
 
   /* ---------- 날짜 (한국 시간 기준) ---------- */
@@ -38,8 +40,11 @@
   };
 
   /* ---------- 글자 채우기 ---------- */
+  const gEn = cap(C.groom.nameEn), bEn = cap(C.bride.nameEn);
   const bind = {
-    groomEnT: cap(C.groom.nameEn), brideEnT: cap(C.bride.nameEn), groomName: C.groom.name, brideName: C.bride.name,
+    // 영문 이름 순서: 신랑측 링크는 첫 화면 신랑 먼저 · 맨 아래 신부 먼저, 신부측 링크는 그 반대
+    openA: BRIDE ? bEn : gEn, openB: BRIDE ? gEn : bEn, closeA: BRIDE ? gEn : bEn, closeB: BRIDE ? bEn : gEn,
+    groomName: C.groom.name, brideName: C.bride.name,
     venueEn: C.venue.nameEn, hallEn: C.venue.hallEn, venueName: C.venue.name, venueHall: C.venue.hall, address: C.venue.address,
   };
   $$("[data-bind]").forEach(el => el.textContent = bind[el.dataset.bind] ?? "");
@@ -71,7 +76,7 @@
   const utc = d => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
   const evTitle = `${C.groom.name} ♥ ${C.bride.name} 결혼식`;
   const loc = `${C.venue.name} ${C.venue.hall} (${C.venue.address})`;
-  const shareUrl = C.siteUrl ? C.siteUrl + "v4/" : location.href.split(/[?#]/)[0];
+  const shareUrl = (C.siteUrl ? C.siteUrl + "v4/" : location.href.split(/[?#]/)[0]) + (BRIDE ? "?side=bride" : "");
   $("#gcalBtn").href = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(evTitle)}&dates=${utc(D)}/${utc(end)}&location=${encodeURIComponent(loc)}&details=${encodeURIComponent(shareUrl)}`;
   $("#icsBtn").onclick = () => {
     const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//wedding//KO", "BEGIN:VEVENT", `UID:${utc(D)}-wedding@kk`, `DTSTAMP:${utc(new Date())}`,

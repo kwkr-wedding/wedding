@@ -275,7 +275,7 @@
   rf.addEventListener("submit", async e => {
     e.preventDefault();
     const data = { type: "rsvp", side: rf.side.value, attend: rf.attend.value, name: rf.name.value.trim(), phone: rf.phone.value.trim(),
-      meal: rf.attend.value === "참석" ? rf.meal.value : "-", note: rf.note.value.trim() };
+      meal: "", note: rf.note.value.trim() };
     if (!data.name) return;
     if (API) {
       const btn = rf.querySelector("[type=submit]"); btn.disabled = true; btn.textContent = "전달 중…";
@@ -283,7 +283,7 @@
       catch { toast("전송에 실패했어요. 잠시 후 다시 시도해주세요"); }
       finally { btn.disabled = false; btn.textContent = "전달하기"; }
     } else if (C.rsvpFallbackPhone) {
-      const body = `[참석 회신] ${data.side} / ${data.name} / ${data.attend}${data.attend === "참석" ? ` / 식사 ${data.meal}` : ""}${data.note ? ` / ${data.note}` : ""}`;
+      const body = `[참석 회신] ${data.side} / ${data.name} / ${data.attend}${data.note ? ` / ${data.note}` : ""}`;
       location.href = `sms:${C.rsvpFallbackPhone}${/iPhone|iPad/.test(navigator.userAgent) ? "&" : "?"}body=${encodeURIComponent(body)}`;
     } else {
       toast("참석 회신 기능이 아직 준비 중입니다");

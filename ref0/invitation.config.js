@@ -46,7 +46,7 @@ window.INVITATION = {
     popup_message: "한 분 한 분 더 정성껏 모실 수 있도록\n참석 여부를 미리 알려 주시면 감사하겠습니다.",
     description: "신랑, 신부에게 참석 의사를\n미리 전달할 수 있습니다.\n회신 부탁드리는 날짜 · 1월 9일",
     button: "참석 의사 전달하기",
-    fields: ["phone", "companions", "meal", "message"], // 빼고 싶은 항목은 지우세요
+    fields: ["phone", "companions", "message"], // 빼고 싶은 항목은 지우세요
     // 응답을 받을 Google Apps Script 웹앱 주소. 루트 config.js 의 appsScriptUrl 과 같은 주소라
     // 응답이 같은 'Wedding Prep' 시트의 RSVP 탭에 쌓입니다. 비우면 실제로 전송되지 않습니다.
     endpoint: "https://script.google.com/macros/s/AKfycbzdutqZ2i3X4YLUOkJhquAYVJtkCk70HJ3a3V53MqdJ4zlMNZjMRO87yhevFdZ-X6gA/exec",

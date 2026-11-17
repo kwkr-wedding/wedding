@@ -227,9 +227,9 @@ body.ink-light .quick{background:rgba(16,22,19,.78);border-top-color:rgba(246,24
 body.ink-light .quick a{color:var(--paper)}
 
 /* ---------- 모달 · 폼 ---------- */
-.modal{position:fixed;inset:0;z-index:50;background:rgba(10,14,12,.6);display:flex;align-items:flex-end;justify-content:center}
+.modal{position:fixed;inset:0;z-index:50;overscroll-behavior:contain;background:rgba(10,14,12,.6);display:flex;align-items:flex-end;justify-content:center}
 .modal.center{align-items:center;padding:20px}
-.sheet{position:relative;width:100%;max-width:520px;max-height:calc(92 * var(--vh));overflow:auto;background:var(--paper);color:var(--ink);border-radius:22px 22px 0 0;
+.sheet{position:relative;overscroll-behavior:contain;width:100%;max-width:520px;max-height:calc(92 * var(--vh));overflow:auto;background:var(--paper);color:var(--ink);border-radius:22px 22px 0 0;
   padding:30px 22px calc(26px + env(safe-area-inset-bottom));text-align:center;animation:up .35s cubic-bezier(.2,.7,.2,1)}
 .sheet.pop{border-radius:22px;padding-bottom:22px}
 @keyframes up{from{transform:translateY(40px);opacity:0}}

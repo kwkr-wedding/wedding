@@ -190,7 +190,7 @@
   /* ---------- 모달 ---------- */
   function unlock() {
     if (!$$(".modal:not([hidden])").length && lb.hidden) document.body.classList.remove("locked");
-    if (introFlow) setTimeout(() => { if (introFlow && !$$(".modal:not([hidden])").length) { introFlow = false; afterIntro(); } }, 60);
+    if (introFlow) setTimeout(() => { if (introFlow && !$$(".modal:not([hidden])").length) { introFlow = false; holdY = null; afterIntro(); } }, 60);
   }
   function openModal(sel) { $(sel).hidden = false; document.body.classList.add("locked"); }
   function closeModal(m) { m.hidden = true; unlock(); }
@@ -237,8 +237,17 @@
     if (store.get("rsvp_done") || store.get("rsvp_skip") === todayKey()) return;
     if ($$(".modal:not([hidden])").length || !lb.hidden) return;
     introFlow = true; thanked = false;
+    // 창이 떠 있는 동안 뒤 화면은 첫 화면 끝에 멈춰 둡니다(관성으로 장면 1까지 넘어가지 않게)
+    const top1 = $("#s1").getBoundingClientRect().top + scrollY;
+    holdY = Math.min(scrollY, Math.round(top1 - .12 * innerHeight));
+    window.scrollTo(0, holdY);
     openModal("#rsvpIntro");
   };
+  let holdY = null;
+  addEventListener("scroll", () => { if (holdY != null && Math.abs(scrollY - holdY) > 1) window.scrollTo(0, holdY); }, { passive: true });
+  const holdBlock = e => { if (holdY != null && !e.target.closest(".modal-card, .modal form, .modal .sheet")) e.preventDefault(); };
+  addEventListener("touchmove", holdBlock, { passive: false });
+  addEventListener("wheel", holdBlock, { passive: false });
   // 화면을 정해진 위치까지 부드럽게 내립니다. 그사이 화면을 만지면 멈춥니다
   const glideTo = (y, ms) => {
     if (RM) return window.scrollTo(0, y);

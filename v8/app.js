@@ -273,24 +273,59 @@
     };
     requestAnimationFrame(step);
   };
-  /* ---------- 부드러운 스크롤 ----------
-   * 휠을 세게 굴리거나 손가락으로 훽 튕겨도 화면이 목표 지점까지 천천히 미끄러지듯 따라갑니다.
-   * 손가락으로 끄는 동안에는 손을 바짝 따라오고, 손을 뗀 뒤의 관성은 짧게(최대 화면 높이의 0.9배) 줄이고 느긋하게 멈춥니다.
-   * 동작 줄이기, 참석 의사 창·크게 보기가 열려 있을 때, 두 손가락(확대) 중, 화면을 확대한 상태, 가로로 넘기는 갤러리에서는 쓰지 않습니다. */
+  /* ---------- 부드러운 스크롤 + 장면 단위 넘김 ----------
+   * 손가락으로 끄는 동안에는 손을 바짝 따라옵니다(천천히 끌면 원하는 만큼 세밀하게 볼 수 있습니다).
+   * 손을 뗄 때의 빠르기에 따라 세 가지로 움직입니다.
+   *  · 천천히(0.25px/ms 미만): 그 자리 근처에서 살짝 미끄러지고 멈춥니다.
+   *  · 보통으로 한 번 휙(0.25~2px/ms): 그 방향의 다음 '멈춤 지점'(장면·페이지가 완성된 화면)까지 스프링처럼 부드럽게 이어 갑니다.
+   *  · 세게(2px/ms 이상): 멈춤 지점 없이 손의 빠르기만큼(최대 화면 5개) 미끄러졌다가 천천히 멈춥니다.
+   * 휠은 굴린 만큼 부드럽게 따라갑니다. 동작 줄이기, 참석 의사 창·크게 보기가 열려 있을 때, 화면 확대 중, 가로 갤러리에서는 쓰지 않습니다. */
   let smoothRaf = 0;
   function smoothStop() { if (smoothRaf) cancelAnimationFrame(smoothRaf); smoothRaf = 0; }
+  // 멈춤 지점: 고정 장면은 각 장면이 완성되는 진행도, 일반 섹션은 맨 위와 화면 0.85개 간격
+  const PIN_STOPS = {
+    s0: () => [0],
+    s1: () => [0, .13, .265, ...[0, 1, 2, 3, 4, 5].map(i => stAt(i) + .09)],
+    s2: () => [0, .5, 1],
+    s4: () => [0, .12, .54, .86, 1]
+  };
+  const snapStops = () => {
+    const H = innerHeight, out = [0], maxY = document.documentElement.scrollHeight - H;
+    document.querySelectorAll("section.scene").forEach(sec => {
+      const top = sec.getBoundingClientRect().top + scrollY, h = sec.offsetHeight, d = h - H;
+      const f = PIN_STOPS[sec.id];
+      if (f && d > 0) f().forEach(p => out.push(top + p * d));
+      else {
+        out.push(top);
+        for (let y = top + .85 * H; y < top + d - .2 * H; y += .85 * H) out.push(y);
+        if (d > 0) out.push(top + d);
+      }
+    });
+    out.push(maxY);
+    return out.map(y => clamp(Math.round(y), 0, maxY)).sort((a, b) => a - b)
+      .filter((y, i, a) => i === 0 || y - a[i - 1] > .12 * H);
+  };
   if (!RM) {
     const root = document.documentElement, vvp = window.visualViewport;
-    const WHEEL = .55, FLING_MS = 300, FLING_MAX = .9, TAU_DRAG = .07, TAU_FREE = .42;
-    let target = scrollY, cur = scrollY, last = 0, tau = TAU_FREE, dragging = false;
+    const WHEEL = .55, TAU_DRAG = .07, TAU_FREE = .42, TAU_FLING = .6;
+    const SLOW = .25, FAST = 2, SPRING = 7;        // px/ms, px/ms, rad/s
+    let target = scrollY, cur = scrollY, vel = 0, last = 0, tau = TAU_FREE, dragging = false, spring = false;
     const maxY = () => root.scrollHeight - innerHeight;
     const blocked = () => holdY != null || root.classList.contains("hold") || document.body.classList.contains("locked") || (vvp && vvp.scale > 1.01);
     const run = now => {
-      if (blocked()) { smoothRaf = 0; return; }
+      if (blocked()) { smoothRaf = 0; spring = false; return; }
       const dt = Math.min(.05, (now - last) / 1000 || .016); last = now;
       target = clamp(target, 0, maxY());
-      cur += (target - cur) * (1 - Math.exp(-dt / tau));
-      if (Math.abs(target - cur) < .35) cur = target;
+      if (spring) {
+        // 임계 감쇠 스프링: 손을 뗀 순간의 빠르기에서 이어받아, 넘치지 않고 멈춤 지점에 사뿐히 섭니다
+        const before = target - cur;
+        vel += (SPRING * SPRING * before - 2 * SPRING * vel) * dt;
+        cur += vel * dt;
+        if ((target - cur) * before <= 0 || (Math.abs(target - cur) < .5 && Math.abs(vel) < 20)) { cur = target; vel = 0; spring = false; }
+      } else {
+        cur += (target - cur) * (1 - Math.exp(-dt / tau));
+        if (Math.abs(target - cur) < .35) cur = target;
+      }
       window.scrollTo(0, cur);
       smoothRaf = cur !== target || dragging ? requestAnimationFrame(run) : 0;
     };
@@ -300,13 +335,14 @@
       if (e.ctrlKey || e.defaultPrevented || blocked() || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
       e.preventDefault(); fresh();
       const d = e.deltaY * (e.deltaMode === 1 ? 32 : e.deltaMode === 2 ? innerHeight : 1);
-      tau = TAU_FREE; target = clamp(target + d * WHEEL, 0, maxY()); kick();
+      spring = false; tau = TAU_FREE; target = clamp(target + d * WHEEL, 0, maxY()); kick();
     }, { passive: false });
     let ty = null, tx = 0, mode = null, samples = [];
     addEventListener("touchstart", e => {
       if (e.touches.length !== 1 || blocked()) { ty = null; return; }
       const t = e.touches[0]; ty = t.clientY; tx = t.clientX; mode = null; samples = [[performance.now(), ty]];
       if (smoothRaf) target = cur; else fresh();   // 미끄러지는 중에 닿으면 그 자리에 멈춥니다
+      spring = false; vel = 0;
     }, { passive: true });
     addEventListener("touchmove", e => {
       if (ty == null || e.touches.length !== 1 || blocked()) { ty = null; return; }
@@ -322,11 +358,20 @@
     const release = () => {
       if (mode === "y" && dragging) {
         const [t0, y0] = samples[0], [t1, y1] = samples[samples.length - 1];
-        const v = performance.now() - t1 < 90 ? (y1 - y0) / Math.max(16, t1 - t0) : 0;   // px/ms
-        const fling = clamp(-v * FLING_MS, -FLING_MAX * innerHeight, FLING_MAX * innerHeight);
-        target = clamp(target + fling, 0, maxY());
+        const v = performance.now() - t1 < 140 ? -(y1 - y0) / Math.max(16, t1 - t0) : 0;   // 화면이 내려가는 방향 +, px/ms
+        const sp = Math.abs(v), H = innerHeight;
+        if (sp >= FAST) {
+          tau = TAU_FLING; target = clamp(target + clamp(v * TAU_FLING * 1000, -5 * H, 5 * H), 0, maxY());
+        } else if (sp >= SLOW) {
+          const dir = Math.sign(v), from = target, eps = .04 * H, stops = snapStops();
+          const next = dir > 0 ? stops.find(y => y > from + eps) : [...stops].reverse().find(y => y < from - eps);
+          if (next != null) { target = next; spring = true; vel = v * 1000; }
+          else { tau = TAU_FREE; target = clamp(target + v * 300, 0, maxY()); }
+        } else {
+          tau = TAU_FREE; target = clamp(target + v * 300, 0, maxY());
+        }
       }
-      dragging = false; tau = TAU_FREE; ty = null; mode = null; kick();
+      dragging = false; ty = null; mode = null; kick();
     };
     addEventListener("touchend", release, { passive: true });
     addEventListener("touchcancel", release, { passive: true });
@@ -466,15 +511,16 @@
     if (!conf || !conf.count || RM) return null;
     const cv = document.createElement("canvas");
     $(boxSel).appendChild(cv);
-    return new Seq(cv, i => `../v4/assets/${conf.dir}/${String(i).padStart(3, "0")}.webp${conf.v ? "?v=" + conf.v : ""}`, conf.count, true);
+    return new Seq(cv, i => `${conf.base || "../v4/assets/"}${conf.dir}/${String(i).padStart(3, "0")}.webp${conf.v ? "?v=" + conf.v : ""}`, conf.count, true);
   };
-  const seqPropose = coverSeq("#shotPropose", V.sequences.propose), seqDoor = coverSeq("#shotDoor", V.sequences.door);
+  // 프러포즈 영상은 V8 전용: 4K 원본 사진에서 다시 만든 1080×1920 프레임
+  const seqPropose = coverSeq("#shotPropose", { base: "media/", dir: "seq-propose", count: 113, v: 1 }), seqDoor = coverSeq("#shotDoor", V.sequences.door);
   // 캔버스 크기는 화면 전체가 아니라 장면 칸에 맞춥니다 (큰 화면에서는 칸이 가운데 휴대폰 너비로 좁아집니다)
   const fitSeq = s => {
     if (!s) return;
     const r = s.canvas.parentElement.getBoundingClientRect();
     if (!r.width || !r.height) return;
-    const k = Math.min(2, devicePixelRatio || 1, 1080 / r.width), w = Math.round(r.width * k), h = Math.round(r.height * k);
+    const k = Math.min(3, devicePixelRatio || 1, 1080 / r.width), w = Math.round(r.width * k), h = Math.round(r.height * k);
     if (s.canvas.width === w && s.canvas.height === h) return;
     s.canvas.width = w; s.canvas.height = h; s.last = ""; s.paint();
   };

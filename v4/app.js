@@ -521,11 +521,10 @@
     // 마지막 사진
     if (!RM && near(endPhoto, .2)) T(endImg, `${((viewP(endPhoto) - .5) * 90).toFixed(1)}px`);
     // 첫 화면 안에서 내리기 시작하면 바로 (바로가기로 다른 곳에 갔을 때는 띄우지 않음)
-    // 참석 의사 창: 첫 화면을 거의 다 내린 뒤(장면 0 진행률 .85) ~ 장면 1 앞부분 사이에서 한 번
+    // 참석 의사 창: 첫 화면이 화면 밖으로 거의 다 넘어갔을 때(장면 1 시작 12% 화면 앞) ~ 장면 1 앞부분 사이에서 한 번
     if (!introShown && Date.now() - navJump > 2500) {
-      const top0 = s0.getBoundingClientRect().top + scrollY, d0 = s0.offsetHeight - innerHeight;
       const top1 = s1.getBoundingClientRect().top + scrollY;
-      if (scrollY >= top0 + .85 * Math.max(d0, 1) && scrollY < top1 + .5 * (s1.offsetHeight - innerHeight)) showRsvpIntro();
+      if (scrollY >= top1 - .12 * innerHeight && scrollY < top1 + .5 * (s1.offsetHeight - innerHeight)) showRsvpIntro();
     }
   };
   let ticking = false;

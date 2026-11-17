@@ -187,7 +187,7 @@ window.WEDDING = {
 
     // 영상: v4/assets/ 안의 mp4 경로. 해당 사진 위에 소리 없이 재생됩니다. "" 로 비우면 사진만 보입니다.
     //   hero = 첫 화면(반복), night = 저녁 6시의 밤 정원(반복)
-    videos: { hero: "video/hero.mp4?v=3", night: "video/night.mp4" },
+    videos: { hero: "", night: "video/night.mp4" },
 
     // 스크롤로 넘기는 프레임 묶음: v4/assets/<dir>/000.webp, 001.webp … 와 장 수 (v: 파일을 바꿨을 때 올리는 번호).
     // propose = 프러포즈 장면으로 천천히 다가가는 영상, door = 문을 나서는 영상 (끝은 빛으로 하얗게 바뀝니다).

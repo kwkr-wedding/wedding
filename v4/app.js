@@ -475,7 +475,7 @@
     // 장면 0
     if (near(s0, .2)) {
       const p = pinP(s0, 0);
-      T(heroPhoto, `${(-p * 2).toFixed(2)}%`, 1 + p * .1);
+      T(heroPhoto, `${(-p * 2).toFixed(2)}%`, 1 + p * .18);   // 내릴수록 사진이 다가옴
       T(heroText, `${(-p * 150).toFixed(1)}px`); heroText.style.opacity = 1 - seg(p, .35, .95);
       hint.style.opacity = 1 - seg(p, 0, .15);
     }
@@ -521,7 +521,12 @@
     // 마지막 사진
     if (!RM && near(endPhoto, .2)) T(endImg, `${((viewP(endPhoto) - .5) * 90).toFixed(1)}px`);
     // 첫 화면 안에서 내리기 시작하면 바로 (바로가기로 다른 곳에 갔을 때는 띄우지 않음)
-    if (!introShown && scrollY > 6 && scrollY < s1.getBoundingClientRect().top + scrollY && Date.now() - navJump > 2500) showRsvpIntro();
+    // 참석 의사 창: 첫 화면을 거의 다 내린 뒤(장면 0 진행률 .85) ~ 장면 1 앞부분 사이에서 한 번
+    if (!introShown && Date.now() - navJump > 2500) {
+      const top0 = s0.getBoundingClientRect().top + scrollY, d0 = s0.offsetHeight - innerHeight;
+      const top1 = s1.getBoundingClientRect().top + scrollY;
+      if (scrollY >= top0 + .85 * Math.max(d0, 1) && scrollY < top1 + .5 * (s1.offsetHeight - innerHeight)) showRsvpIntro();
+    }
   };
   let ticking = false;
   const req = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };

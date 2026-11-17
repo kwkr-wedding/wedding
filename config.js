@@ -189,8 +189,8 @@ window.WEDDING = {
     videos: { hero: "video/hero.mp4?v=2", night: "video/night.mp4" },
 
     // 스크롤로 넘기는 프레임 묶음: v4/assets/<dir>/000.webp, 001.webp … 와 장 수 (v: 파일을 바꿨을 때 올리는 번호).
-    // propose = 프러포즈 장면으로 천천히 다가가는 영상, door = 문을 지나 정원으로 들어가는 영상.
+    // propose = 프러포즈 장면으로 천천히 다가가는 영상, door = 문을 나서는 영상 (끝은 빛으로 하얗게 바뀝니다).
     // count 를 0 으로 바꾸면 영상 대신 사진을 확대하는 효과로 돌아갑니다.
-    sequences: { propose: { dir: "seq-propose", count: 121, v: 2 }, door: { dir: "seq-door", count: 121, v: 2 } },
+    sequences: { propose: { dir: "seq-propose", count: 121, v: 2 }, door: { dir: "seq-door", count: 97, v: 2 } },
   },
 };

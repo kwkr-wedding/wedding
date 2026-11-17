@@ -264,7 +264,13 @@
   $$("#greeting p").forEach((el, i) => el.style.transitionDelay = `${i * 260}ms`);
   if ("IntersectionObserver" in window && !RM) {
     const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: .18, rootMargin: "0px 0px -8% 0px" });
-    $$(".rv,.rv-x,#greeting p").forEach(el => io.observe(el));
+    $$(".rv,#greeting p").forEach(el => io.observe(el));
+    // 혼주 소개의 신랑·신부 사진은 지나갈 때마다 좌우에서 모입니다: 화면 밖으로 완전히 나가면 제자리로 돌려 두었다가 다시 들어올 때 움직임
+    const ioX = new IntersectionObserver(es => es.forEach(e => {
+      if (e.intersectionRatio >= .18) e.target.classList.add("in");
+      else if (!e.isIntersecting) e.target.classList.remove("in");
+    }), { threshold: [0, .18] });
+    $$(".rv-x").forEach(el => ioX.observe(el));
   } else $$(".rv,.rv-x,#greeting p").forEach(el => el.classList.add("in"));
 
   /* ==========================================================

@@ -17,7 +17,7 @@
 }
 @supports(height:1svh){:root{--vh:1svh}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{-webkit-text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%;overflow-anchor:none}
 /* 가로 넘침은 #app 에서 잘라 냅니다 (html·body 에 overflow 를 주면 장면 고정이 풀립니다) */
 #app{overflow-x:clip}
 html,body{margin:0}

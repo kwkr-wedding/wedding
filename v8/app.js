@@ -246,7 +246,7 @@
       const y0 = scrollY, d = holdY - y0, ms = Math.min(1400, 700 + Math.abs(d) * 2.5), t0 = performance.now();
       const step = now => {
         if (holdY == null) return;
-        const k = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - k, 3);   // 감속
+        const k = Math.min(1, Math.max(0, (now - t0) / ms)), e = 1 - Math.pow(1 - k, 3);   // 감속
         window.scrollTo(0, Math.round(y0 + d * e));
         if (k < 1) requestAnimationFrame(step);
       };
@@ -267,7 +267,7 @@
     ["touchstart", "wheel", "keydown"].forEach(t => addEventListener(t, halt, { once: true, passive: true }));
     const step = now => {
       if (stop) return;
-      const k = Math.min(1, (now - t0) / ms), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+      const k = Math.min(1, Math.max(0, (now - t0) / ms)), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
       window.scrollTo(0, Math.round(y0 + (y - y0) * e));
       if (k < 1) requestAnimationFrame(step);
     };
@@ -275,10 +275,11 @@
   };
   /* ---------- 부드러운 스크롤 + 장면 단위 넘김 ----------
    * 손가락으로 끄는 동안에는 손을 바짝 따라옵니다(천천히 끌면 원하는 만큼 세밀하게 볼 수 있습니다).
-   * 손을 뗄 때의 빠르기에 따라 세 가지로 움직입니다.
-   *  · 천천히(0.25px/ms 미만): 그 자리 근처에서 살짝 미끄러지고 멈춥니다.
-   *  · 보통으로 한 번 휙(0.25~2px/ms): 그 방향의 다음 '멈춤 지점'(장면·페이지가 완성된 화면)까지 스프링처럼 부드럽게 이어 갑니다.
+   * 손을 뗄 때의 손짓에 따라 세 가지로 움직입니다.
+   *  · 천천히 끌다 놓음(또는 0.45px/ms 미만, 또는 0.45초 넘게 끈 손짓): 그 자리 근처에서 살짝 미끄러지고 멈춥니다(최대 화면 0.9개).
+   *  · 짧게 '휙'(0.45초 안에 떼고 0.45~2px/ms): 그 방향의 다음 '멈춤 지점'(장면·페이지가 완성된 화면, 화면 1.3개 안)까지 스프링처럼 부드럽게 이어 갑니다.
    *  · 세게(2px/ms 이상): 멈춤 지점 없이 손의 빠르기만큼(최대 화면 5개) 미끄러졌다가 천천히 멈춥니다.
+   * 스크롤을 옮긴 프레임에서 바로 화면 효과(update)도 그려 한 프레임 어긋나 떨리는 일이 없게 하고, 다른 곳이 스크롤을 옮기면 맞서지 않고 따라갑니다.
    * 휠은 굴린 만큼 부드럽게 따라갑니다. 동작 줄이기, 참석 의사 창·크게 보기가 열려 있을 때, 화면 확대 중, 가로 갤러리에서는 쓰지 않습니다. */
   let smoothRaf = 0;
   function smoothStop() { if (smoothRaf) cancelAnimationFrame(smoothRaf); smoothRaf = 0; }
@@ -308,13 +309,15 @@
   if (!RM) {
     const root = document.documentElement, vvp = window.visualViewport;
     const WHEEL = .55, TAU_DRAG = .07, TAU_FREE = .42, TAU_FLING = .6;
-    const SLOW = .25, FAST = 2, SPRING = 7;        // px/ms, px/ms, rad/s
-    let target = scrollY, cur = scrollY, vel = 0, last = 0, tau = TAU_FREE, dragging = false, spring = false;
+    const SNAP = .45, FAST = 2, SPRING = 7;        // px/ms, px/ms, rad/s
+    let target = scrollY, cur = scrollY, vel = 0, last = 0, tau = TAU_FREE, dragging = false, spring = false, setY = null, gT0 = 0;
     const maxY = () => root.scrollHeight - innerHeight;
     const blocked = () => holdY != null || root.classList.contains("hold") || document.body.classList.contains("locked") || (vvp && vvp.scale > 1.01);
     const run = now => {
       if (blocked()) { smoothRaf = 0; spring = false; return; }
-      const dt = Math.min(.05, (now - last) / 1000 || .016); last = now;
+      // 첫 프레임의 rAF 시각은 손짓보다 앞설 수 있어 시간 차가 음수가 됩니다 → 그대로 쓰면 한 프레임 뒤로 물러났다 나가며 떨림. 첫 프레임은 1/60초로
+      const dt = last && now > last ? Math.min(.05, (now - last) / 1000) : 1 / 60; last = now;
+      if (setY != null && Math.abs(scrollY - setY) > 1.5) { const d = scrollY - setY; cur += d; target += d; }   // 다른 곳이 스크롤을 옮겼으면 맞서지 않고 그만큼 따라감
       target = clamp(target, 0, maxY());
       if (spring) {
         // 임계 감쇠 스프링: 손을 뗀 순간의 빠르기에서 이어받아, 넘치지 않고 멈춤 지점에 사뿐히 섭니다
@@ -326,10 +329,11 @@
         cur += (target - cur) * (1 - Math.exp(-dt / tau));
         if (Math.abs(target - cur) < .35) cur = target;
       }
-      window.scrollTo(0, cur);
+      window.scrollTo(0, cur); setY = scrollY;
+      if (Math.abs(setY - updY) > .01) update();   // 스크롤과 그 위치의 화면 효과를 같은 프레임에 그립니다(한 프레임 늦으면 떨려 보임)
       smoothRaf = cur !== target || dragging ? requestAnimationFrame(run) : 0;
     };
-    const kick = () => { if (!smoothRaf) { last = performance.now(); smoothRaf = requestAnimationFrame(run); } };
+    const kick = () => { if (!smoothRaf) { last = 0; setY = scrollY; smoothRaf = requestAnimationFrame(run); } };
     const fresh = () => { if (!smoothRaf) target = cur = scrollY; };
     addEventListener("wheel", e => {
       if (e.ctrlKey || e.defaultPrevented || blocked() || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
@@ -340,7 +344,7 @@
     let ty = null, tx = 0, mode = null, samples = [];
     addEventListener("touchstart", e => {
       if (e.touches.length !== 1 || blocked()) { ty = null; return; }
-      const t = e.touches[0]; ty = t.clientY; tx = t.clientX; mode = null; samples = [[performance.now(), ty]];
+      const t = e.touches[0]; ty = t.clientY; tx = t.clientX; mode = null; samples = [[performance.now(), ty]]; gT0 = performance.now();
       if (smoothRaf) target = cur; else fresh();   // 미끄러지는 중에 닿으면 그 자리에 멈춥니다
       spring = false; vel = 0;
     }, { passive: true });
@@ -357,19 +361,21 @@
     }, { passive: false });
     const release = () => {
       if (mode === "y" && dragging) {
-        const [t0, y0] = samples[0], [t1, y1] = samples[samples.length - 1];
-        const v = performance.now() - t1 < 140 ? -(y1 - y0) / Math.max(16, t1 - t0) : 0;   // 화면이 내려가는 방향 +, px/ms
+        const [t0, y0] = samples[0], [t1, y1] = samples[samples.length - 1], now = performance.now();
+        const v = now - t1 < 140 ? -(y1 - y0) / Math.max(16, t1 - t0) : 0;   // 화면이 내려가는 방향 +, px/ms
         const sp = Math.abs(v), H = innerHeight;
+        // 장면 단위로 넘기는 건 '휙' 튕긴 손짓(짧게 닿았다 떼고, 어느 정도 빠름)일 때만. 천천히 끌다 놓으면 그 자리 근처에서 멈춥니다
+        const flick = now - gT0 < 450 && sp >= SNAP;
+        let snapped = false;
         if (sp >= FAST) {
           tau = TAU_FLING; target = clamp(target + clamp(v * TAU_FLING * 1000, -5 * H, 5 * H), 0, maxY());
-        } else if (sp >= SLOW) {
+          snapped = true;
+        } else if (flick) {
           const dir = Math.sign(v), from = target, eps = .04 * H, stops = snapStops();
           const next = dir > 0 ? stops.find(y => y > from + eps) : [...stops].reverse().find(y => y < from - eps);
-          if (next != null) { target = next; spring = true; vel = v * 1000; }
-          else { tau = TAU_FREE; target = clamp(target + v * 300, 0, maxY()); }
-        } else {
-          tau = TAU_FREE; target = clamp(target + v * 300, 0, maxY());
+          if (next != null && Math.abs(next - from) < 1.3 * H) { target = next; spring = true; vel = v * 1000; snapped = true; }
         }
+        if (!snapped) { tau = TAU_FREE; target = clamp(target + clamp(v * 300, -.9 * H, .9 * H), 0, maxY()); }
       }
       dragging = false; ty = null; mode = null; kick();
     };
@@ -435,6 +441,8 @@
   const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
   const seg = (p, a, b) => clamp((p - a) / (b - a));
   const ease = t => t * t * (3 - 2 * t);
+  // 애니메이션 장면의 프레임 넘김: 시작과 끝은 느리게(보통의 약 0.4배), 가운데는 조금 빠르게. 전체 길이는 그대로
+  const SLOW_K = .6, slowEnds = t => t - SLOW_K * Math.sin(2 * Math.PI * t) / (2 * Math.PI);
   let vh = innerHeight, vw = innerWidth;
   // 화면에 고정된 장면의 진행률 0~1 (동작 줄이기에서는 대표 장면 하나를 보여 줍니다)
   const pinP = (el, still) => { if (RM) return still; const r = el.getBoundingClientRect(), d = r.height - vh; return d > 0 ? clamp(-r.top / d) : 0; };
@@ -449,7 +457,7 @@
   const gliding = new Set();
   let glideId = 0, glideT = 0;
   const glide = now => {
-    const dt = Math.min(64, glideT ? now - glideT : 16); glideT = now;
+    const dt = Math.min(64, glideT && now > glideT ? now - glideT : 16); glideT = now;
     const k = 1 - Math.exp(-dt / 70);
     gliding.forEach(s => {
       const d = s.target - s.cur;
@@ -459,46 +467,99 @@
     glideId = gliding.size ? requestAnimationFrame(glide) : 0;
     if (!glideId) glideT = 0;
   };
+  /* 프레임 그림은 압축된 파일(Blob)로 받아 두고, 지금 보는 위치 앞뒤의 몇 장만 미리 백그라운드에서 풀어(createImageBitmap) 둡니다.
+   * 그리는 순간에 그림을 푸느라 화면이 멈칫하지 않게 하고, 풀어 둔 그림의 메모리는 전체 약 160MB 안에서 가장 먼 것부터 비웁니다.
+   * 아직 풀리지 않은 프레임 자리에는 가장 가까이 풀린 프레임을 그립니다. 이 기능이 없는 브라우저는 예전 방식(Image)으로 그립니다. */
+  const BITMAP = "createImageBitmap" in window && "fetch" in window;
+  const BM_LIMIT = 160e6, allSeqs = [];
+  let bmBytes = 0, paintQ = new Set(), paintId = 0;
+  const flushPaint = () => { paintId = 0; const q = paintQ; paintQ = new Set(); q.forEach(s => { s.last = ""; s.paint(); }); };
+  const queuePaint = s => { paintQ.add(s); if (!paintId) paintId = requestAnimationFrame(flushPaint); };
+  const evict = () => {
+    const now = performance.now();
+    while (bmBytes > BM_LIMIT) {
+      let vs = null, vi = -1, vd = -1;
+      allSeqs.forEach(s => s.bms.forEach((bm, i) => {
+        if (!bm) return;
+        const d = Math.abs(i - s.target) + (now - s.used > 1500 ? 1e4 : 0);   // 한동안 안 그린 장면 먼저, 그다음 지금 위치에서 먼 프레임
+        if (d > vd) { vd = d; vs = s; vi = i; }
+      }));
+      if (!vs) break;
+      vs.drop(vi);
+    }
+  };
   class Seq {
-    constructor(canvas, url, count, cover) { Object.assign(this, { canvas, url, count, cover, imgs: [], last: "", cur: -1, target: 0, started: false }); this.ctx = canvas.getContext("2d"); }
+    constructor(canvas, url, count, cover) {
+      Object.assign(this, { canvas, url, count, cover, imgs: [], blobs: [], bms: [], busy: new Set(), last: "", cur: -1, target: 0, used: 0, started: false });
+      this.ctx = canvas.getContext("2d"); allSeqs.push(this);
+    }
     load() {
       if (this.started) return; this.started = true;
       const order = [], seen = new Set(), add = i => { if (!seen.has(i)) { seen.add(i); order.push(i); } };
       for (const step of [8, 4, 2, 1]) { for (let i = 0; i < this.count; i += step) add(i); add(this.count - 1); }
       order.forEach(i => {
-        const im = new Image(); im.decoding = "async";
-        im.onload = () => { im.ok = true; this.last = ""; this.paint(); };
-        im.src = this.url(i); this.imgs[i] = im;
+        if (BITMAP) {
+          fetch(this.url(i)).then(r => r.ok ? r.blob() : null).then(bl => { if (bl) { this.blobs[i] = bl; this.pump(); } }).catch(() => {});
+        } else {
+          const im = new Image(); im.decoding = "async";
+          im.onload = () => { im.ok = true; if (Math.abs(i - this.cur) < 3 || this.last === "") queuePaint(this); };
+          im.src = this.url(i); this.imgs[i] = im;
+        }
       });
     }
+    // 지금 향하는 위치에서 가까운 프레임부터 두 장씩 풀기
+    pump() {
+      if (!BITMAP) return;
+      const c = Math.round(Math.max(0, this.target)), R = 6;
+      for (let k = 0; k <= this.count && this.busy.size < 2; k++) {
+        for (const i of k ? [c + k, c - k] : [c]) {
+          if (i < 0 || i >= this.count || this.busy.size >= 2) continue;
+          if (k > R && this.bms.some(Boolean)) return;   // 가까운 범위만 미리 풀어 둡니다 (처음 한 장은 멀어도 풉니다)
+          if (!this.blobs[i] || this.bms[i] || this.busy.has(i)) continue;
+          this.busy.add(i);
+          createImageBitmap(this.blobs[i]).then(bm => {
+            this.busy.delete(i);
+            if (this.bms[i]) { bm.close(); return this.pump(); }
+            this.bms[i] = bm; bmBytes += bm.width * bm.height * 4; evict();
+            if (this.bms[i] && (Math.abs(i - this.cur) < 3 || !this.last)) queuePaint(this);
+            this.pump();
+          }).catch(() => { this.busy.delete(i); });
+        }
+      }
+    }
+    drop(i) { const bm = this.bms[i]; if (!bm) return; bmBytes -= bm.width * bm.height * 4; bm.close(); this.bms[i] = null; }
+    frame(i) { return BITMAP ? this.bms[i] : (this.imgs[i] && this.imgs[i].ok ? this.imgs[i] : null); }
     draw(p) {
-      this.target = clamp(p) * (this.count - 1);
+      this.target = clamp(p) * (this.count - 1); this.pump();
       if (this.cur < 0 || RM || Math.abs(this.target - this.cur) < .02) { this.cur = this.target; gliding.delete(this); return this.paint(); }
       gliding.add(this);
       if (!glideId) glideId = requestAnimationFrame(glide);
     }
     put(im, alpha) {
-      const c = this.canvas, x = this.ctx;
+      const c = this.canvas, x = this.ctx, iw = im.naturalWidth || im.width, ih = im.naturalHeight || im.height;
       x.globalAlpha = alpha;
       if (!this.cover) return x.drawImage(im, 0, 0, c.width, c.height);
-      const k = Math.max(c.width / im.naturalWidth, c.height / im.naturalHeight), w = im.naturalWidth * k, h = im.naturalHeight * k;
+      const k = Math.max(c.width / iw, c.height / ih), w = iw * k, h = ih * k;
       x.drawImage(im, (c.width - w) / 2, (c.height - h) / 2, w, h);
     }
     paint() {
-      const ok = i => this.imgs[i] && this.imgs[i].ok, w = Math.max(0, this.cur);
-      // 지금 위치 앞뒤로 이미 받은 프레임을 찾아 그 사이를 겹쳐 그립니다
+      const ok = i => !!this.frame(i), w = Math.max(0, this.cur);
+      // 지금 위치 앞뒤로 준비된 프레임을 찾아 그 사이를 겹쳐 그립니다
       let lo = Math.floor(w), hi = Math.ceil(w);
       while (lo > 0 && !ok(lo)) lo--;
       while (hi < this.count - 1 && !ok(hi)) hi++;
       if (!ok(lo)) { if (!ok(hi)) return; lo = hi; }
       if (!ok(hi)) hi = lo;
+      // 한쪽이 너무 멀면(아직 안 풀림) 가까운 쪽 한 장만 그립니다
+      if (hi - lo > 4) { if (w - lo <= hi - w) hi = lo; else lo = hi; }
       let t = hi > lo ? Math.round((w - lo) / (hi - lo) * 32) / 32 : 0;
       if (t >= 1) { lo = hi; t = 0; }
       const key = t > 0 ? `${lo}+${hi}+${t}` : `${lo}`;
+      this.used = performance.now();
       if (key === this.last) return;
       this.last = key;
-      this.put(this.imgs[lo], 1);
-      if (t > 0) this.put(this.imgs[hi], t);
+      this.put(this.frame(lo), 1);
+      if (t > 0) this.put(this.frame(hi), t);
       this.ctx.globalAlpha = 1;
     }
   }
@@ -607,7 +668,7 @@
   const T = (e, y = 0, s = 1) => e.style.transform = `translate3d(0,${y},0) scale(${s})`;
 
   const update = () => {
-    ticking = false;
+    ticking = false; updY = scrollY;
     paintSky();
     const t = RM ? 1080 : timeAt(scrollY), time = fmt(t);
     if (clockT.textContent !== time) clockT.textContent = time;
@@ -637,7 +698,7 @@
         const at = stAt(i), next = i + 1 < story.length ? stAt(i + 1) : at7;
         if (p > at - .15) sq.load();
         dropIn(stFig[i], seg(p, at, at + .025), stRot[i], i % 2 ? -6 : 6);
-        sq.draw(seg(p, at + .025, at + .09));
+        sq.draw(slowEnds(seg(p, at + .025, at + .09)));
         const gone = i + 2 < story.length ? stAt(i + 2) : at7 + .03;
         stFig[i].style.opacity = Math.min(+stFig[i].style.opacity, 1 - seg(p, gone + .03, gone + .06));
         stCap[i].style.opacity = 1 - seg(p, next, next + .02);
@@ -707,9 +768,9 @@
       if (scrollY >= top1 - .12 * innerHeight && scrollY < top1 + .5 * (s1.offsetHeight - innerHeight)) showRsvpIntro();
     }
   };
-  let ticking = false;
+  let ticking = false, updY = -1;
   const req = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
-  addEventListener("scroll", req, { passive: true });
+  addEventListener("scroll", () => { if (Math.abs(scrollY - updY) > .01) req(); }, { passive: true });   // 부드러운 스크롤이 이미 그린 위치면 다시 그리지 않음
   let rw = innerWidth;
   addEventListener("resize", () => { if (innerWidth === rw && Math.abs(innerHeight - vh) < 140) { vh = innerHeight; fitSeq(seqPropose); fitSeq(seqDoor); return req(); } rw = innerWidth; layout(); req(); });
   addEventListener("load", () => { layout(); req(); gUpdate(); });

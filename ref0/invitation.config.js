@@ -15,6 +15,7 @@ window.INVITATION = {
     date: "2027-01-23",
     time: "18:00",
     hall_name: "웨스틴 조선 서울",
+    hall_name_en: "THE WESTIN JOSUN SEOUL",
     hall_detail: "1층 그랜드볼룸",
     address: "서울특별시 중구 소공로 106",
     tel: "02-771-0500",

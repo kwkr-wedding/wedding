@@ -48,18 +48,20 @@
     venueEn: C.venue.nameEn, hallEn: C.venue.hallEn, venueName: C.venue.name, venueHall: C.venue.hall, address: C.venue.address,
   };
   $$("[data-bind]").forEach(el => el.textContent = bind[el.dataset.bind] ?? "");
-  $("#heroDate").textContent = `${ymd} · ${DOW_EN}, ${hourEn}`;
+  // 날짜·시간이 있는 곳에는 장소도 함께 적습니다
+  const venueKo = `${C.venue.name} ${C.venue.hall}`, venueEnFull = `${C.venue.nameEn} · ${C.venue.hallEn}`;
+  $("#heroDate").innerHTML = `${esc(`${ymd} · ${DOW_EN}, ${hourEn}`)}<span class="hero-venue">${esc(venueEnFull)}</span>`;
   $("#greeting").innerHTML = C.greeting.map(l => `<p>${esc(l)}</p>`).join("");
   $("#parG").textContent = `${C.groom.father.name} · ${C.groom.mother.name}의`;
   $("#parB").textContent = `${C.bride.father.name} · ${C.bride.mother.name}의`;
   $("#relG").textContent = C.groom.relation; $("#relB").textContent = C.bride.relation;
   $("#sixD").textContent = `${ymd} · ${DOW_EN}`;
-  $("#sixK").textContent = whenKo;
+  $("#sixK").innerHTML = `${esc(whenKo)}<span class="six-v">${esc(venueKo)}</span>`;
   $("#footDate").textContent = `${Y} . ${pad(M)} . ${pad(DD)}`;
 
   /* ---------- 달력 · 남은 날 ---------- */
   $("#calTitle").textContent = `${Y}.${pad(M)}.${pad(DD)}`;
-  $("#calSub").textContent = `${DOW_KO}요일 ${hourKo}`;
+  $("#calSub").innerHTML = `${esc(`${DOW_KO}요일 ${hourKo}`)}<br>${esc(venueKo)}`;
   const first = new Date(Date.UTC(Y, M - 1, 1)).getUTCDay();
   const days = new Date(Date.UTC(Y, M, 0)).getUTCDate();
   let g = ["일", "월", "화", "수", "목", "금", "토"].map((d, i) => `<div class="dow${i === 0 ? " sun" : ""}">${d}</div>`).join("");

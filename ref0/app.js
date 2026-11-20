@@ -324,7 +324,7 @@
     const out = el('section', { class: 'section', id: 'sec-calendar' },
       el('div', { class: 'reveal' },
         el('p', { class: 'cal-date' }, `${Y}.${pad2(M)}.${pad2(D)}`),
-        el('p', { class: 'cal-time' }, `${WD_KO[dow]}요일 ${timeKo}`)));
+        el('p', { class: 'cal-time' }, `${WD_KO[dow]}요일 ${timeKo}`, el('br'), venue)));
 
     if (K.show_calendar !== false) {
       const grid = el('div', { class: 'cal-grid reveal', role: 'img', 'aria-label': `${Y}년 ${M}월 달력, 예식일 ${D}일` });
@@ -439,7 +439,8 @@
         [L[0], L[1], L[2]].filter(Boolean),
         [String(D), MONTH_EN[M - 1], String(Y)],
         [WD_EN[dow], timeEn],
-      ];
+        W.hall_name_en ? W.hall_name_en.split(' ') : null,   // 날짜·시간 아래에 장소도
+      ].filter(Boolean);
       return el('section', { class: 'section flush' },
         el('div', { class: 'mid-text reveal' }, rows.map((r) => el('div', {}, r.map((t) => el('span', {}, t))))),
         el('div', { class: 'mid-photo reveal' }, photo(m.photo, '가로 사진', 1200, 800, false, m)));

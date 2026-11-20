@@ -88,7 +88,7 @@
 
   /* ---------- calendar & countdown ---------- */
   $("#calTitle").textContent = `${Y}.${pad(M)}.${pad(DD)}`;
-  $("#calSub").textContent = `${DOW_KO}요일 ${hourKo}`;
+  $("#calSub").innerHTML = `${esc(`${DOW_KO}요일 ${hourKo}`)}<br>${esc(`${C.venue.name} ${C.venue.hall}`)}`;   // 날짜·시간 아래에 장소도
   const first = new Date(Date.UTC(Y, M - 1, 1)).getUTCDay();
   const days = new Date(Date.UTC(Y, M, 0)).getUTCDate();
   let g = ["일", "월", "화", "수", "목", "금", "토"].map((d, i) => `<div class="dow${i === 0 ? " sun" : ""}">${d}</div>`).join("");
@@ -161,7 +161,7 @@
   }
 
   /* ---------- date banner ---------- */
-  $("#bnRows").innerHTML = [["WE", "ARE", "GETTING", "MARRIED"], [DD, MONTH_EN, Y], [DOW_EN, clockEn]]
+  $("#bnRows").innerHTML = [["WE", "ARE", "GETTING", "MARRIED"], [DD, MONTH_EN, Y], [DOW_EN, clockEn], C.venue.nameEn.split(" ")]
     .map(r => `<div>${r.map(w => `<span>${w}</span>`).join("")}</div>`).join("");
   setPhoto("#bnPhoto", "#bnImg", V.banner);
 

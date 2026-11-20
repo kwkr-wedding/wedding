@@ -501,10 +501,12 @@
     const s = new Seq(cv, i => `${conf.base || "../v4/assets/"}${conf.dir}/${F3(i)}.webp${conf.v ? "?v=" + conf.v : ""}`, conf.count, true);
     s.maxW = maxW; s.cap = cap; return s;
   };
-  // 프러포즈 영상은 V8 과 같은 파일(Topaz 로 키운 1080×1920 프레임)을 씁니다. 문 장면 프레임은 576×1024 라서 캔버스도 그 크기에 맞춥니다.
-  // 캔버스가 작을수록 움직이는 동안 가볍습니다: 프러포즈는 움직일 때 화면 배율 2 까지만 그리고, 멈추면 원래 해상도로 한 번 더 그려 겹칩니다(아래 sharpen)
-  const seqPropose = coverSeq("#shotPropose", { base: "../v8/media/", dir: "seq-propose", count: 121, v: 2 }, 1080, 2);
-  const seqDoor = coverSeq("#shotDoor", V.sequences.door, 640, 3);
+  // 프러포즈 · 문 장면 프레임은 V9 전용(media/): 둘 다 1080×1920.
+  //  · 프러포즈: 실제 연속 촬영 두 장(시작 = 보정본, 끝 = 신랑이 반지를 내밀고 신부가 옅게 웃는 컷)을 시작·끝 장면으로 만든 영상이라 얼굴이 끝까지 실제 사진과 같습니다
+  //  · 문: V4 와 같은 영상을 고해상도로 키운 뒤 빛 효과를 다시 입힌 것
+  // 캔버스가 작을수록 움직이는 동안 가볍습니다: 움직일 때는 화면 배율 2 까지만 그리고, 멈추면 원래 해상도로 한 번 더 그려 겹칩니다(아래 mkSharp)
+  const seqPropose = coverSeq("#shotPropose", { base: "media/", dir: "seq-propose", count: 121, v: 1 }, 1080, 2);
+  const seqDoor = coverSeq("#shotDoor", V.sequences.door && V.sequences.door.count ? { base: "media/", dir: "seq-door", count: 97, v: 1 } : null, 1080, 2);
   // 캔버스 크기는 화면 전체가 아니라 장면 칸에 맞춥니다 (큰 화면에서는 칸이 가운데 휴대폰 너비로 좁아집니다)
   const seqSize = (s, cap) => { const r = s.canvas.parentElement.getBoundingClientRect(), k = Math.min(cap, devicePixelRatio || 1, s.maxW / r.width); return [Math.round(r.width * k), Math.round(r.height * k)]; };
   const fitSeq = s => {
@@ -512,30 +514,36 @@
     const [w, h] = seqSize(s, s.cap);
     if (!w || !h || (s.canvas.width === w && s.canvas.height === h)) return;
     s.canvas.width = w; s.canvas.height = h; s.last = ""; s.paint();
-    if (s === seqPropose) sharpOff();
+    (s === seqPropose ? shP : shD).off();
   };
-  let sharpCv = null, sharpT = 0, sharpOn = false, sharpKey = "";
-  const sharpOff = () => { clearTimeout(sharpT); sharpT = 0; if (sharpOn) { sharpOn = false; sharpCv.classList.remove("on"); } };
-  // 멈춰 있을 때만: 프러포즈 장면이 보이고 있으면 0.2초 뒤 원래 해상도로 한 번 더 그립니다 (이미 같은 프레임을 그려 두었으면 그대로 둡니다)
-  const sharpArm = () => {
-    const s = seqPropose; if (!s || raf) return;
-    if (!(SY >= B(s2).top - 1 && near(s2, 0) && pinP(s2, 0) < .62)) return;
-    const pk = s.pick(); if (!pk || (sharpOn && pk.join() === sharpKey)) return;
-    sharpOff(); sharpT = setTimeout(sharpen, 200);
+  /* 멈췄을 때만 선명하게: 장면이 보이고 있으면 0.2초 뒤 원래 해상도(1080 너비) 캔버스를 겹쳐 그립니다. 다시 움직이면 바로 걷습니다.
+   * 같은 프레임을 이미 그려 두었으면 그대로 두고, 멈춘 뒤 늦게 도착한 프레임으로 바뀌면 다시 그립니다. */
+  const mkSharp = (s, visible) => {
+    if (!s) return { off() {}, arm() {} };
+    let cv = null, T = 0, on = false, key = "";
+    const off = () => { clearTimeout(T); T = 0; if (on) { on = false; cv.classList.remove("on"); } };
+    const draw = () => {
+      T = 0;
+      const pk = s.pick(); if (!pk || raf) return;
+      key = pk.join();
+      const [w, h] = seqSize(s, 3);
+      if (w <= s.canvas.width) return;   // 이미 가장 큰 해상도로 그리고 있음 (화면 배율 2 이하인 기기)
+      if (!cv) { cv = document.createElement("canvas"); cv.className = "sharp"; s.canvas.after(cv); }
+      if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+      const x = cv.getContext("2d");
+      s.put(s.frame(pk[0]), 1, cv, x); if (pk[2] > 0) s.put(s.frame(pk[1]), pk[2], cv, x); x.globalAlpha = 1;
+      on = true; cv.classList.add("on");
+    };
+    const arm = () => {
+      if (raf || !visible()) return;
+      const pk = s.pick(); if (!pk || (on && pk.join() === key)) return;
+      off(); T = setTimeout(draw, 200);
+    };
+    s.onLate = arm;
+    return { off, arm };
   };
-  if (seqPropose) seqPropose.onLate = sharpArm;   // 멈춘 뒤에 늦게 도착한 프레임으로 다시 그렸을 때
-  const sharpen = () => {
-    sharpT = 0;
-    const s = seqPropose, pk = s && s.pick(); if (!pk || raf) return;
-    sharpKey = pk.join();
-    const [w, h] = seqSize(s, 3);
-    if (w <= s.canvas.width) return;   // 이미 가장 큰 해상도로 그리고 있음 (화면 배율 2 이하인 기기)
-    if (!sharpCv) { sharpCv = document.createElement("canvas"); sharpCv.className = "sharp"; s.canvas.after(sharpCv); }
-    if (sharpCv.width !== w || sharpCv.height !== h) { sharpCv.width = w; sharpCv.height = h; }
-    const x = sharpCv.getContext("2d");
-    s.put(s.frame(pk[0]), 1, sharpCv, x); if (pk[2] > 0) s.put(s.frame(pk[1]), pk[2], sharpCv, x); x.globalAlpha = 1;
-    sharpOn = true; sharpCv.classList.add("on");
-  };
+  const inS2 = () => SY >= B(s2).top - 1 && near(s2, 0);
+  const shP = mkSharp(seqPropose, () => inS2() && pinP(s2, 0) < .62), shD = mkSharp(seqDoor, () => inS2() && pinP(s2, 0) > .5 && pinP(s2, 0) < .95);
 
   /* ---------- 앨범 속 영상 ----------
    * 사진이 맨 위에 놓이면 그 안의 영상이 처음부터 한 번, 원래 빠르기로 재생되고 마지막 장면에서 멈춥니다.
@@ -756,7 +764,7 @@
   const night = el("nightPhoto"), six = el("six"), sixT = $(".six-t"), sixTb = el("sixT"), sixD = el("sixD"), sixK = el("sixK");
   const clock = el("clock"), clockT = el("clockT"), lights = el("lights"), endImg = $("#endPhoto img");
   const T = (e, y = 0, s = 1) => e.style.transform = `translate3d(0,${y},0) scale(${s})`;
-  let s2Hid = null, brOn = null, lastPP = -1;
+  let s2Hid = null, brOn = null, lastPP = -1, lastDP = -1;
 
   const update = () => {
     paintSky();
@@ -806,11 +814,13 @@
     if (near(s2, .2)) {
       const p = pinP(s2, .3);
       const pp = seg(p, 0, .56);
-      if (pp !== lastPP) { lastPP = pp; sharpOff(); }
+      if (pp !== lastPP) { lastPP = pp; shP.off(); }
       if (seqPropose) seqPropose.draw(pp); else imgPropose.style.transform = `scale(${(1 + .95 * ease(seg(p, 0, .56))).toFixed(4)})`;
       s2Line.style.opacity = seg(p, .12, .22) * (1 - seg(p, .44, .52));
       shotDoor.style.opacity = ease(seg(p, .5, .64));
-      if (seqDoor) seqDoor.draw(seg(p, .5, .96)); else imgDoor.style.transform = `scale(${(1 + .5 * seg(p, .5, 1)).toFixed(4)})`;
+      const dp = seg(p, .5, .96);
+      if (dp !== lastDP) { lastDP = dp; shD.off(); }
+      if (seqDoor) seqDoor.draw(dp); else imgDoor.style.transform = `scale(${(1 + .5 * seg(p, .5, 1)).toFixed(4)})`;
       // 문 프레임의 끝은 빛으로 하얗게 바뀝니다. 마지막에 바탕색 막을 덮고, 이름은 밝아진 화면 위에 먹색으로 나타납니다
       s2Wash.style.opacity = seqDoor ? seg(p, .92, .96) : 0;
       s2Names.style.opacity = seqDoor ? seg(p, .9, .96) : seg(p, .7, .78) * (1 - seg(p, .94, 1));
@@ -866,7 +876,7 @@
     SY = RM || Math.abs(gap) < .4 || Math.abs(gap) > 2.5 * vh ? y : SY + gap * (1 - Math.exp(-DAMP * dt));
     update();
     if (SY !== y || wT != null) raf = requestAnimationFrame(frame);
-    else { lastT = 0; sharpArm(); }   // 멈췄습니다
+    else { lastT = 0; shP.arm(); shD.arm(); }   // 멈췄습니다
   };
   function req() { if (!raf) raf = requestAnimationFrame(frame); }
   addEventListener("scroll", req, { passive: true });

@@ -436,7 +436,7 @@
     if (RM) reveals.forEach(el => el.classList.add("in"));
     else {
       // 섹션 머리의 선이 먼저 그어지고, 내용이 한 번 떠오릅니다
-      const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: .08, rootMargin: "0px 0px -7% 0px" });
+      const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: .05, rootMargin: "0px 0px -5% 0px" });
       reveals.forEach(el => io.observe(el));
       new IntersectionObserver(es => es.forEach(e => { greetSeen = e.isIntersecting; if (greetSeen) tryGreet(); }), { threshold: .6 }).observe(greeting);
     }

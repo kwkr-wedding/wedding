@@ -148,6 +148,33 @@
   track.addEventListener("click", e => { const b = e.target.closest("button.g-item"); if (!b) return; $("#lbImg").src = b.dataset.src; lb.hidden = false; document.body.classList.add("locked"); });
   const closeLb = () => { lb.hidden = true; unlock(); };
   lb.addEventListener("click", closeLb);
+  // 크게 본 사진을 위나 아래로 밀면 닫힙니다: 사진이 손가락을 따라 움직이고 뒤 배경이 옅어지다가, 70px 넘게 밀었거나 빠르게 튕겼으면 닫히고 아니면 제자리로 돌아옵니다
+  {
+    const im = $("#lbImg"); let y0 = null, x0 = 0, t0 = 0, dy = 0, drag = false;
+    const reset = anim => { im.style.transition = anim ? "transform .2s ease" : ""; lb.style.transition = anim ? "background-color .2s ease" : ""; im.style.transform = im.style.opacity = lb.style.backgroundColor = ""; };
+    lb.addEventListener("touchstart", e => {
+      if (e.touches.length !== 1) { y0 = null; return; }
+      y0 = e.touches[0].clientY; x0 = e.touches[0].clientX; t0 = performance.now(); dy = 0; drag = false; im.style.transition = lb.style.transition = "";
+    }, { passive: true });
+    lb.addEventListener("touchmove", e => {
+      if (y0 == null || e.touches.length !== 1) return;
+      const t = e.touches[0]; dy = t.clientY - y0;
+      if (!drag) { if (Math.abs(dy) < 8 || Math.abs(dy) < Math.abs(t.clientX - x0)) return; drag = true; }
+      const k = Math.min(1, Math.abs(dy) / 320);
+      im.style.transform = `translate3d(0,${dy.toFixed(1)}px,0) scale(${(1 - .12 * k).toFixed(3)})`;
+      lb.style.backgroundColor = `rgba(6,9,8,${(.94 * (1 - .7 * k)).toFixed(3)})`;
+    }, { passive: true });
+    const end = () => {
+      if (y0 == null) return; y0 = null;
+      if (!drag) return; drag = false;
+      if (Math.abs(dy) > 70 || (performance.now() - t0 < 300 && Math.abs(dy) > 30)) {
+        im.style.transition = "transform .18s ease-in, opacity .18s ease-in"; lb.style.transition = "background-color .18s ease-in";
+        im.style.transform = `translate3d(0,${dy > 0 ? 55 : -55}vh,0) scale(.88)`; im.style.opacity = "0"; lb.style.backgroundColor = "rgba(6,9,8,0)";
+        setTimeout(() => { closeLb(); reset(false); }, 190);
+      } else reset(true);
+    };
+    lb.addEventListener("touchend", end, { passive: true }); lb.addEventListener("touchcancel", end, { passive: true });
+  }
   document.addEventListener("contextmenu", e => { if (e.target.closest("img,video,canvas")) e.preventDefault(); });
 
   /* ---------- 사진 확대 막기 ----------
@@ -688,10 +715,11 @@
   /* 장면 1 의 흐름 (진행률 0~1, U = 화면 한 개만큼 내린 거리)
    *  · 사진 아홉 장(어린 신부 · 어린 신랑 · 이야기 여섯 장 · 프러포즈 그림)이 화면 0.64개 간격으로 한 장씩 놓입니다.
    *    스크롤은 '몇 번째 사진까지 놓였는지'만 정하고, 놓이는 움직임과 영상 재생은 시간에 맞춰 흘러갑니다.
-   *  · 마지막 그림이 놓인 뒤에는 스크롤에 맞춰 그림이 화면 가득 커지고(Z0~Z1) 실제 프러포즈 사진으로 바뀝니다(R0~R1). */
-  const U = 100 / ((parseFloat(s1.style.getPropertyValue("--len")) || 740) - 100);
+   *  · 마지막 그림이 놓인 뒤에는 스크롤에 맞춰 그림이 화면 가득 커지고(Z0~Z1), 다 커질 무렵 서서히 사라져 바탕색만 남았다가(F0~F1)
+   *    실제 프러포즈 사진이 서서히 나타납니다(R0~R1). 두 그림이 겹쳐 보이는 순간은 없습니다. */
+  const U = 100 / ((parseFloat(s1.style.getPropertyValue("--len")) || 760) - 100);
   const NCARD = 9, CARD0 = .08 * U, CARD = .64 * U, HYS = .07 * U, cardAt = i => CARD0 + i * CARD;
-  const Z0 = cardAt(NCARD - 1) + .34 * U, Z1 = Z0 + .52 * U, R0 = Z1 - .04 * U, R1 = Z1 + .3 * U;
+  const Z0 = cardAt(NCARD - 1) + .34 * U, Z1 = Z0 + .52 * U, F0 = Z1 - .22 * U, F1 = Z1 + .03 * U, R0 = F1, R1 = Z1 + .5 * U;
   const cards = [el("prB"), el("prA"), ...[1, 2, 3, 4, 5, 6].map(k => el(`st${k}`)), st7];
   const notes = [el("tvNote"), el("noteB"), ...[1, 2, 3, 4, 5, 6].map(k => el(`sn${k}`)), null];
   let K = -1;   // 맨 위에 놓인 사진의 번호 (-1 = 아직 없음)
@@ -766,8 +794,10 @@
         const lerp = (x, y) => (x + (y - x) * z).toFixed(1) + "px";
         const box = { left: lerp((brW - w0) / 2, (brW - cw) / 2), top: lerp(.48 * brH - h0 / 2, (brH - ch) / 2), width: lerp(w0, cw), height: lerp(h0, ch) };
         bridgeImgs.forEach(im => Object.assign(im.style, box));
+        bridgeImgs[0].style.opacity = 1 - ease(seg(p1, F0, F1));
         bridgeReal.style.opacity = ease(seg(p1, R0, R1));
-        bridge.style.background = z >= 1 ? skyCss : "transparent";
+        // 그림이 사라지기 시작할 때부터는 막을 바탕색으로 채워 아래의 인화 사진이 비치지 않게 합니다 (이때 그림은 이미 인화 사진을 다 덮고 있습니다)
+        bridge.style.background = p1 >= F0 ? skyCss : "transparent";
       }
       if (o !== brOn) { brOn = o; bridge.style.visibility = o ? "visible" : "hidden"; bridge.style.opacity = o ? 1 : 0; st7.classList.toggle("set", o); }
     }

@@ -1,0 +1,322 @@
+/* ==========================================================
+ *  V9 · 저절로 흐르는 앨범 (V4·V8 을 바탕으로)
+ *  바탕색·시계·전구 줄은 화면에 고정되어 있고, app.js 가 스크롤 위치를 부드럽게 따라가며 움직입니다.
+ * ========================================================== */
+@font-face{font-family:"Cormorant Garamond";font-style:normal;font-weight:300;font-display:swap;src:url(../v4/fonts/cormorant-garamond-latin-300-normal.woff2) format("woff2")}
+@font-face{font-family:"Cormorant Garamond";font-style:italic;font-weight:300;font-display:swap;src:url(../v4/fonts/cormorant-garamond-latin-300-italic.woff2) format("woff2")}
+@font-face{font-family:"Cormorant Garamond";font-style:normal;font-weight:400;font-display:swap;src:url(../v4/fonts/cormorant-garamond-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Cormorant Garamond";font-style:italic;font-weight:400;font-display:swap;src:url(../v4/fonts/cormorant-garamond-latin-400-italic.woff2) format("woff2")}
+@font-face{font-family:"Cormorant Garamond";font-style:normal;font-weight:500;font-display:swap;src:url(../v4/fonts/cormorant-garamond-latin-500-normal.woff2) format("woff2")}
+
+:root{
+  --white:#f4f4f1; --green:#dde3d6; --dusk:#2f3b36; --night:#101613;
+  --bulb:#f2d08a; --accent:#5e7350; --ink:#23262a; --paper:#f6f1e7;
+  --ko:"Gowun Batang","Nanum Myeongjo","Apple SD Gothic Neo",serif;
+  --en:"Cormorant Garamond","Gowun Batang",serif;
+  --vh:1vh; --quick:52px;
+}
+@supports(height:1svh){:root{--vh:1svh}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%;overflow-anchor:none}
+/* 가로 넘침은 #app 에서 잘라 냅니다 (html·body 에 overflow 를 주면 장면 고정이 풀립니다) */
+#app{overflow-x:clip}
+html,body{margin:0}
+body{font-family:var(--ko);color:var(--ink);background:var(--white);line-height:1.8;word-break:keep-all;
+  padding-bottom:calc(var(--quick) + env(safe-area-inset-bottom))}
+body.locked{overflow:hidden}
+html.hold,html.hold body{overflow:hidden}
+img{display:block;max-width:100%;-webkit-user-drag:none;user-select:none;-webkit-touch-callout:none}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+a{color:inherit}
+.en{font-family:var(--en);letter-spacing:.08em}
+[hidden]{display:none!important}
+
+/* 사진·영상이 있는 칸에서는 두 손가락 확대·두 번 눌러 확대가 되지 않습니다 (스크롤과 좌우 넘김만). 글씨 카드는 확대할 수 있습니다 */
+.pin,.garden,.person .ph,.g-track,.end-photo{touch-action:pan-x pan-y}
+
+/* ---------- 고정 요소 ---------- */
+#sky{position:fixed;inset:0;z-index:-1;background:var(--white)}
+.clock{position:fixed;z-index:20;top:calc(14px + env(safe-area-inset-top));right:18px;font-family:var(--en);display:flex;align-items:baseline;gap:5px;
+  color:var(--ink);transition:opacity .4s,color .4s;pointer-events:none}
+.clock small{font-size:11px;letter-spacing:.18em}
+.clock b{font-weight:400;font-size:24px;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+body.ink-light .clock{color:var(--paper)}
+.clock.off{opacity:0}
+
+.lights{position:fixed;z-index:15;top:0;left:0;right:0;height:120px;overflow:hidden;pointer-events:none;opacity:0;transition:opacity .6s}
+.lights::before{content:"";position:absolute;inset:0;background:linear-gradient(var(--night) 22%,rgba(16,22,19,.75) 55%,rgba(16,22,19,0))}
+.lights.on{opacity:1}
+.strand{position:absolute;left:-4%;width:108%;overflow:visible;transform-origin:50% 0}
+.strand.far{top:-6px;height:54px;opacity:.55;filter:blur(1.2px);animation:sway 7s ease-in-out infinite alternate}
+.strand.near{top:-4px;height:74px;animation:sway 5.5s ease-in-out -2s infinite alternate}
+.strand path{fill:none;stroke:#0b0e0c;stroke-width:1;vector-effect:non-scaling-stroke}
+.strand .cap{fill:#1b211d}
+.strand .bulb{fill:#55554a;transition:fill .5s}
+.strand .glow{opacity:0;transition:opacity .6s}
+.strand g.lit .bulb{fill:#fff3cf}
+.strand g.lit .glow{opacity:1}
+@keyframes sway{from{transform:rotate(-.5deg)}to{transform:rotate(.5deg)}}
+
+/* ---------- 장면 공통 ---------- */
+.scene{position:relative}
+.scene.pinned{height:calc(var(--len) * 1vh)}
+.pin{position:sticky;top:0;height:calc(100 * var(--vh));overflow:hidden}
+.scene.flow{padding:84px 22px 40px;max-width:560px;margin:0 auto;text-align:center}
+.scene.flow.wide{max-width:none;padding-left:0;padding-right:0}
+body.ink-light .scene[data-ink=light]{color:var(--paper)}
+.scene[data-ink=light]{color:var(--paper)}
+.label{margin:0 0 10px;font-size:12px;letter-spacing:.32em;opacity:.7}
+.title{margin:0 0 26px;font-weight:400;font-size:22px;letter-spacing:.04em}
+.title.sm{font-size:19px;margin-bottom:18px}
+.body-text{margin:0 0 14px;font-size:15px}
+.muted{opacity:.6;font-size:13.5px}
+.card{background:var(--paper);color:var(--ink);border-radius:20px;padding:28px 20px;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.28)}
+.card .label{opacity:.55}
+
+.rv{opacity:0;transform:translateY(26px);transition:opacity .9s ease,transform .9s cubic-bezier(.2,.7,.2,1)}
+.rv.in{opacity:1;transform:none}
+.rv-x{opacity:0;transition:opacity 1s ease,transform 1.1s cubic-bezier(.2,.7,.2,1)}
+.rv-x.left{transform:translateX(-46px)} .rv-x.right{transform:translateX(46px)}
+.rv-x.in{opacity:1;transform:none}
+
+.line{position:absolute;left:0;right:0;margin:0;text-align:center;font-size:clamp(21px,6vw,28px);letter-spacing:.06em;line-height:1.6;opacity:0;will-change:opacity,transform}
+.line.over{color:#fff;text-shadow:0 1px 18px rgba(0,0,0,.55),0 0 2px rgba(0,0,0,.35)}
+
+/* ---------- 장면 0 ---------- */
+.hero-photo{position:absolute;left:0;right:0;top:calc(9 * var(--vh));height:100%;transform-origin:50% 40%;will-change:transform;
+  -webkit-mask-image:linear-gradient(#0000,#000 16%);mask-image:linear-gradient(#0000,#000 16%)}
+.hero-photo img,.hero-photo video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 100%}
+.hero-text{position:absolute;left:0;right:0;top:calc(9.5 * var(--vh));text-align:center;will-change:transform,opacity}
+.hero-sub{margin:0;font-size:11px;letter-spacing:.42em;opacity:.65}
+.hero-names{margin:8px 0 6px;font-weight:300;font-size:clamp(36px,11.2vw,54px);line-height:1;letter-spacing:.01em;display:flex;flex-direction:column;align-items:center}
+.hero-names i{font-style:italic}
+.hero-names span{font-size:.5em;font-style:italic;opacity:.7;margin:.05em 0}
+.hero-date{margin:10px 0 0;font-size:13px;letter-spacing:.3em}
+.hero-venue{display:block;margin-top:7px;font-size:10px;letter-spacing:.18em;opacity:.85}
+.scroll-hint{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(18px + var(--quick));margin:0;padding:7px 16px 4px;border-radius:999px;text-align:center;font-size:12.5px;letter-spacing:.14em;color:var(--ink);background:rgba(244,244,241,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.scroll-hint i{display:block;width:1px;height:14px;margin:4px auto 0;background:var(--ink);animation:hint 1.8s ease-in-out infinite;transform-origin:50% 0}
+@keyframes hint{0%{transform:scaleY(0)}55%{transform:scaleY(1)}100%{transform:scaleY(1);opacity:0}}
+
+/* ---------- 장면 1 ---------- */
+/* 글·사진·자막은 스크롤 위치가 '몇 번째 사진까지 놓였는지'만 정하고, 놓이는 움직임은 시간에 맞춰(transition) 흘러갑니다 */
+.l1{top:calc(15 * var(--vh));transform:translateY(18px);transition:opacity .8s ease,transform 1s cubic-bezier(.2,.7,.2,1)}
+.l1.on{opacity:1;transform:none}
+/* 앨범: 인화한 사진(.print)이 한 장씩 쌓입니다. --rot = 놓인 뒤의 기울기, --from = 내려앉기 전의 기울기 차이 */
+.album{position:absolute;left:50%;top:48%;width:min(84%,430px);aspect-ratio:1/1;transform:translate(-50%,-50%)}
+.print{position:absolute;left:50%;top:50%;width:100%;margin:0;padding:9px 9px 0;background:#fffdf8;border-radius:3px;opacity:0;
+  box-shadow:0 1px 2px rgba(60,45,25,.18),0 14px 34px rgba(70,50,25,.2);will-change:transform,opacity;
+  transform:translate(-50%,-50%) translateY(64px) rotate(calc(var(--rot,0deg) + var(--from,0deg))) scale(1.06);
+  transition:opacity .45s ease,transform .85s cubic-bezier(.2,.75,.2,1)}
+.print.on{opacity:1;transform:translate(-50%,-50%) rotate(var(--rot,0deg))}
+/* 두 장 뒤의 사진이 놓이면 물러나고, 프러포즈 그림이 커지기 시작하면 나머지가 모두 물러납니다 */
+.print.on.gone,.album.zoom .print:not(#st7){opacity:0;transition:opacity .6s ease,transform .85s cubic-bezier(.2,.75,.2,1)}
+.print.set{transition:none}
+.print canvas,.print img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;background:#e9e3d6}
+.print figcaption{height:36px;line-height:36px;text-align:center;font-size:13px;letter-spacing:.08em;color:#5b5348;transition:opacity .4s ease}
+.print.under figcaption{opacity:0}
+.print.tall{width:44%;left:15%;top:80%;padding-bottom:9px}
+.print.tall img{aspect-ratio:344/428}
+/* 활짝 웃는 사진은 캠코더 영상이 조금 흐른 뒤에 놓입니다 (처음 놓일 때만. app.js 가 late 를 붙입니다) */
+.print.late.on{transition-delay:2.2s}
+.print.tall9{width:52%;padding-bottom:9px}
+.print.tall9 img{aspect-ratio:9/16}
+/* 사진 속 영상: 첫 장면 그림(img) 위에 영상(video)이 겹쳐 있고, 재생이 시작되면 영상이 보입니다. 자동 재생이 막힌 기기에서는 그 위의 캔버스에 프레임을 차례로 그립니다 */
+.clip{position:relative;aspect-ratio:4/3;overflow:hidden;background:#e9e3d6}
+.clip img,.clip video,.clip canvas{position:absolute;left:0;top:0;width:100%;height:100%;aspect-ratio:auto;object-fit:cover;background:none;display:block}
+.clip video{opacity:0;transition:opacity .18s linear;pointer-events:none}
+.clip video.on{opacity:1}
+.clip video::-webkit-media-controls,.clip video::-webkit-media-controls-start-playback-button{display:none!important;-webkit-appearance:none}
+#s1 .tv-note{font-size:16px;line-height:1.6;letter-spacing:.05em;bottom:calc(9 * var(--vh) + var(--quick))}
+/* 장면 1 끝: 프러포즈 그림이 인화 사진 자리에서 화면 가득 커졌다가, 장면 2 에서 실제 사진으로 바뀝니다 */
+.bridge{position:fixed;z-index:10;top:0;left:50%;width:100%;height:calc(100 * var(--vh));transform:translateX(-50%);overflow:hidden;opacity:0;visibility:hidden;pointer-events:none;will-change:opacity}
+.bridge img{opacity:1;position:absolute;left:0;top:0;width:100%;height:100%;max-width:none;display:block;will-change:left,top,width,height}
+.tv-note{position:absolute;left:0;right:0;bottom:calc(11 * var(--vh) + var(--quick));margin:0;text-align:center;font-size:13.5px;letter-spacing:.08em;opacity:0;transition:opacity .4s ease}
+.tv-note.on{opacity:1;transition:opacity .7s ease .3s}
+
+/* ---------- 장면 2 ---------- */
+.stage{position:absolute;inset:0;will-change:opacity}
+.shot{position:absolute;inset:0;overflow:hidden;will-change:opacity}
+.shot img,.shot canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;will-change:transform}
+#shotPropose img{transform-origin:52% 52%}
+/* 멈췄을 때 원래 해상도로 한 번 더 그려 겹치는 캔버스: 움직이기 시작하면 바로 걷힙니다 */
+.shot canvas.sharp{opacity:0}
+.shot canvas.sharp.on{opacity:1;transition:opacity .25s ease}
+/* 사진 위에 겹치는 영상: 재생이 시작되면 나타납니다 */
+.vid{opacity:0;transition:opacity .8s ease}
+.vid.on{opacity:1}
+#shotDoor{opacity:0}
+#shotDoor img{transform-origin:56% 34%}
+.line.l2{top:calc(14 * var(--vh));color:var(--ink);text-shadow:0 0 16px rgba(255,255,255,.9),0 0 3px rgba(255,255,255,.8)}
+#shotDoor::after{content:"";position:absolute;left:0;right:0;bottom:0;height:46%;background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.6))}
+/* 문 장면의 끝: 프레임 안에서 문밖이 먼저 밝게 날아가고 두 사람이 빛 속으로 사라집니다.
+   마지막에 이 막이 바탕색으로 덮어(색은 app.js 가 넣습니다), 아래 정원 사진의 흐린 가장자리와 색이 정확히 이어집니다 */
+.wash{position:absolute;inset:0;opacity:0;pointer-events:none;background:#f4f4f1;will-change:opacity}
+.lit #shotDoor::after{display:none}
+.lit .names{color:var(--ink);text-shadow:0 0 16px rgba(255,255,255,.9),0 0 3px rgba(255,255,255,.8)}
+.names{bottom:calc(16 * var(--vh) + var(--quick));font-size:clamp(22px,6.4vw,30px);letter-spacing:.2em}
+.names i{font-style:normal;margin:0 .5em;opacity:.8}
+
+/* ---------- 장면 3 ---------- */
+.garden{position:relative;aspect-ratio:1217/1404;overflow:hidden;
+  -webkit-mask-image:linear-gradient(#0000,#000 10%,#000 88%,#0000);mask-image:linear-gradient(#0000,#000 10%,#000 88%,#0000)}
+.garden img{position:absolute;left:0;top:-7%;width:100%;height:114%;max-width:none;object-fit:cover;object-position:50% 50%;will-change:transform}
+.g-bg,.g-duo{transform:scale(1.04)}.g-leaf{transform:scale(1.15)}
+.invite{padding:30px 24px 110px;text-align:center}
+.greeting p{margin:0 0 1.05em;font-size:16.5px;letter-spacing:.03em;opacity:0;transform:translateY(22px);transition:opacity 1s ease,transform 1s cubic-bezier(.2,.7,.2,1)}
+.greeting p.in{opacity:1;transform:none}
+#s3b{min-height:calc(100 * var(--vh));display:flex;align-items:center}
+.parents{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:560px;margin:0 auto;padding:40px 20px calc(60px + var(--quick))}
+.person{text-align:center}
+.person .ph{aspect-ratio:3/4;border-radius:999px 999px 14px 14px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.35)}
+.person .ph img{width:100%;height:100%;object-fit:cover}
+.p-par{margin:16px 0 2px;font-size:13.5px;opacity:.8;letter-spacing:.04em}
+.p-name{margin:0;font-size:19px;letter-spacing:.18em}
+.p-name small{font-size:12.5px;letter-spacing:.06em;opacity:.7;margin-right:.6em}
+.p-name b{font-weight:400}
+
+/* ---------- 장면 4 ---------- */
+.night{position:absolute;left:50%;bottom:calc(var(--quick) + 2 * var(--vh));height:min(117vw,645px,calc(98 * var(--vh) - var(--quick) - 250px));aspect-ratio:2/3;transform:translate(-50%,70%);
+  border-radius:999px 999px 16px 16px;overflow:hidden;opacity:0;box-shadow:0 0 90px rgba(242,208,138,.18);will-change:transform,opacity}
+.night img,.night video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.six{position:absolute;left:0;right:0;top:calc(20 * var(--vh));text-align:center;transform-origin:50% 0;will-change:transform,opacity}
+.six-t{margin:0;display:flex;justify-content:center;align-items:baseline;gap:.14em;color:var(--paper);opacity:0}
+.six-t small{font-size:clamp(14px,4vw,18px);letter-spacing:.2em}
+.six-t b{font-weight:300;font-size:clamp(84px,27vw,132px);line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.six-t.hit b{text-shadow:0 0 44px rgba(242,208,138,.55)}
+.six-d{margin:12px 0 4px;font-size:15px;letter-spacing:.34em;opacity:0}
+.six-k{margin:0;font-size:15px;letter-spacing:.06em;opacity:0}
+.six-v{display:block;margin-top:6px;font-size:13.5px;opacity:.85}
+
+/* ---------- 일시 ---------- */
+.cal-title{margin:0;font-size:30px;letter-spacing:.14em}
+.cal-sub{margin:0 0 18px;font-size:14.5px}
+.calendar .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px 0;max-width:330px;margin:0 auto;font-family:var(--en);font-size:17px}
+.calendar .dow{font-family:var(--ko);font-size:12px;opacity:.55;padding-bottom:6px}
+.calendar .d{height:36px;display:flex;align-items:center;justify-content:center}
+.calendar .sun{color:#b0574c}
+.calendar .day{background:var(--night);color:var(--bulb);border-radius:50%;width:36px;margin:0 auto;box-shadow:0 0 0 4px rgba(242,208,138,.25)}
+.dday{margin:20px 0 18px;font-size:15px}
+.dday b{font-weight:400;color:var(--accent);font-size:1.15em}
+.btn-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:46px;padding:0 18px;border-radius:999px;font-size:14.5px;text-decoration:none;letter-spacing:.02em}
+.btn.line{border:1px solid rgba(35,38,42,.3)}
+.btn.solid{background:var(--night);color:var(--paper)}
+.btn.ghost{border:1px solid rgba(246,241,231,.4);color:var(--paper)}
+.btn.wide{width:100%}
+.btn[disabled]{opacity:.5}
+
+/* ---------- 오시는 길 ---------- */
+.venue-en{margin:-10px 0 24px;font-size:13px;letter-spacing:.26em;line-height:1.9;opacity:.8}
+.loc-name{margin:0;font-size:18px}
+.loc-addr{margin:2px 0 0;font-size:14.5px}
+.link-btn{margin-left:6px;font-size:12.5px;padding:3px 10px;border:1px solid rgba(35,38,42,.3);border-radius:999px}
+.loc-tel{margin:2px 0 16px;font-size:14px}
+.loc-tel a{text-decoration:none;opacity:.7}
+.map{border-radius:14px;overflow:hidden;height:250px;background:#e6e2d8}
+.map iframe{width:100%;height:100%;border:0}
+.nav-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 20px}
+.nav-btns a{display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px;border:1px solid rgba(35,38,42,.2);border-radius:12px;font-size:13.5px;text-decoration:none;background:#fff}
+.dot{width:10px;height:10px;border-radius:50%}
+.dot.naver{background:#03c75a}.dot.kakao{background:#fae100}.dot.tmap{background:#e6002d}
+.transport{text-align:left}
+.transport .t{padding:14px 2px;border-top:1px solid rgba(35,38,42,.12)}
+.transport h4{margin:0 0 4px;font-size:14.5px;font-weight:400;color:var(--accent)}
+.transport ul{margin:0;padding:0;list-style:none;font-size:14px;line-height:1.75}
+
+/* ---------- 갤러리 ---------- */
+.g-track{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;padding:6px 11vw 20px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.g-track::-webkit-scrollbar{display:none}
+.g-item{position:relative;flex:0 0 78vw;max-width:400px;aspect-ratio:2/3;border-radius:16px;overflow:hidden;scroll-snap-align:center;background:#1a211d;box-shadow:0 18px 44px rgba(0,0,0,.45)}
+.g-item img{position:absolute;top:0;left:-9%;width:118%;max-width:none;height:100%;object-fit:cover;will-change:transform}
+.g-wrap{will-change:transform}
+.g-count{margin:4px 0 0;font-size:14px;letter-spacing:.2em;opacity:.7}
+
+/* ---------- 마무리 ---------- */
+.end-photo{position:relative;height:calc(100 * var(--vh));overflow:hidden;
+  -webkit-mask-image:linear-gradient(#0000,#000 14%,#000 84%,#0000);mask-image:linear-gradient(#0000,#000 14%,#000 84%,#0000)}
+.end-photo img{position:absolute;left:0;top:-7%;width:100%;height:114%;object-fit:cover;will-change:transform}
+.end-line{position:absolute;left:0;right:0;bottom:17%;margin:0;text-align:center;color:#fff;font-size:clamp(22px,6.4vw,30px);letter-spacing:.1em;line-height:1.6;text-shadow:0 1px 20px rgba(0,0,0,.7)}
+.acc-group{border-top:1px solid rgba(35,38,42,.14);text-align:left}
+.acc-head{width:100%;display:flex;justify-content:space-between;align-items:center;min-height:52px;font-size:15.5px}
+.acc-head::after{content:"";width:8px;height:8px;border-right:1px solid;border-bottom:1px solid;transform:rotate(45deg);transition:transform .3s;margin-right:4px}
+.acc-group.open .acc-head::after{transform:rotate(-135deg)}
+.acc-body{display:none;padding-bottom:10px}
+.acc-group.open .acc-body{display:block}
+.acc-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0}
+.acc-row small{display:block;font-size:12px;opacity:.6}
+.acc-row .num{font-size:14px}
+.acc-row .num b{font-weight:400;font-family:var(--en);font-size:17px;letter-spacing:.03em}
+.mini{flex:none;min-height:38px;padding:0 14px;border:1px solid rgba(35,38,42,.3);border-radius:999px;font-size:13px}
+.share{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:28px}
+.footer{margin-top:64px;padding-bottom:30px}
+.foot-names{margin:0;font-size:30px;font-weight:300;letter-spacing:.02em}
+.foot-date{margin:4px 0 0;font-size:13px;letter-spacing:.3em;opacity:.7}
+
+/* ---------- 바로가기 ---------- */
+.quick{position:fixed;z-index:30;left:0;right:0;bottom:0;height:calc(var(--quick) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);
+  display:grid;grid-template-columns:repeat(4,auto);justify-content:space-evenly;align-items:center;
+  background:rgba(244,244,241,.82);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid rgba(35,38,42,.1);transition:background .4s,color .4s}
+.quick a{display:flex;align-items:center;height:var(--quick);padding:0 6px;font-size:14px;text-decoration:none;color:var(--ink);letter-spacing:.02em;white-space:nowrap}
+body.ink-light .quick{background:rgba(16,22,19,.78);border-top-color:rgba(246,241,231,.12)}
+body.ink-light .quick a{color:var(--paper)}
+
+/* ---------- 모달 · 폼 ---------- */
+.modal{position:fixed;inset:0;z-index:50;overscroll-behavior:contain;background:rgba(10,14,12,.6);display:flex;align-items:flex-end;justify-content:center}
+.modal.center{align-items:center;padding:20px}
+.sheet{position:relative;overscroll-behavior:contain;width:100%;max-width:520px;max-height:calc(92 * var(--vh));overflow:auto;background:var(--paper);color:var(--ink);border-radius:22px 22px 0 0;
+  padding:30px 22px calc(26px + env(safe-area-inset-bottom));text-align:center;animation:up .35s cubic-bezier(.2,.7,.2,1)}
+.sheet.pop{border-radius:22px;padding-bottom:22px}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+.close{position:absolute;z-index:2;top:8px;right:10px;width:44px;height:44px;font-size:28px;line-height:1;opacity:.6}
+form{text-align:left}
+.field{display:block;margin-bottom:16px}
+.f-label{display:block;font-size:13.5px;margin-bottom:6px;opacity:.75}
+.f-label em{font-style:normal;opacity:.6}
+.field input:not([type=radio]),.field textarea{width:100%;font:inherit;font-size:16px;padding:12px 14px;border:1px solid rgba(35,38,42,.25);border-radius:12px;background:#fff;color:var(--ink)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg.three{grid-template-columns:repeat(3,1fr)}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{display:flex;align-items:center;justify-content:center;min-height:46px;border:1px solid rgba(35,38,42,.25);border-radius:12px;font-size:15px;background:#fff}
+.seg input:checked+label{background:var(--night);color:var(--paper);border-color:var(--night)}
+.seg input:focus-visible+label{outline:2px solid var(--accent);outline-offset:2px}
+form.absent .attend-only{display:none}
+.form-note{font-size:12.5px;opacity:.65;margin:0 0 12px}
+.agree{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;margin-bottom:16px}
+.agree input{margin-top:5px;width:18px;height:18px;accent-color:var(--night)}
+.pop-info{margin:18px 0;padding:14px;border-radius:12px;background:#fff;text-align:left;font-size:14.5px}
+.pop-info div{display:flex;gap:12px;padding:3px 0}
+.pop-info dt{flex:none;width:76px;opacity:.6}
+.pop-info dd{margin:0}
+.text-btn{margin-top:12px;font-size:13.5px;opacity:.65;text-decoration:underline;min-height:44px}
+.lightbox{position:fixed;inset:0;z-index:60;background:rgba(6,9,8,.94);display:flex;align-items:center;justify-content:center;touch-action:none}
+.lightbox img{max-width:100%;max-height:100%;object-fit:contain}
+.lb-close{position:absolute;top:calc(8px + env(safe-area-inset-top));right:10px;width:48px;height:48px;font-size:32px;color:#fff;z-index:1}
+/* 회신 창을 닫은 뒤 "이어서 화면을 내려주세요!" — 누를 필요 없이 잠깐 떠 있다 사라집니다 */
+.cue{position:fixed;z-index:45;left:50%;bottom:calc(var(--quick) + 30px + env(safe-area-inset-bottom));transform:translate(-50%,14px);display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:10px 20px 6px;border-radius:22px;text-align:center;font-size:14px;letter-spacing:.06em;color:var(--ink);background:rgba(244,244,241,.82);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  box-shadow:0 8px 24px rgba(0,0,0,.08);opacity:0;pointer-events:none;transition:opacity .5s ease,transform .5s ease;white-space:nowrap}
+.cue small{font-size:12px;opacity:.7;letter-spacing:.04em}
+.cue i{display:block;width:1px;height:14px;margin:4px auto 0;background:var(--ink);animation:hint 1.8s ease-in-out infinite;transform-origin:50% 0}
+.cue.show{opacity:1;transform:translate(-50%,0)}
+.toast{position:fixed;z-index:70;left:50%;bottom:calc(var(--quick) + 26px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:rgba(20,24,22,.92);color:#fff;
+  padding:10px 18px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+:focus-visible{outline:2px solid var(--bulb);outline-offset:2px}
+
+/* 큰 화면에서는 휴대폰 너비로 가운데 정렬 */
+@media(min-width:700px){
+  #app{max-width:520px;margin:0 auto}
+  .bridge{max-width:520px}
+  .g-track{padding-left:60px;padding-right:60px}
+  .hero-names{flex-direction:row;justify-content:center;gap:.28em;font-size:40px}.hero-names span{font-size:.7em}.line{font-size:28px}.six-t b{font-size:132px}
+  .night{height:min(600px,calc(98 * var(--vh) - var(--quick) - 250px))}
+}
+
+/* 동작 줄이기: 움직임을 끄고 사진만 보여 줍니다 (app.js 가 html 에 rm 을 붙입니다) */
+.rm .scene.pinned{height:calc(100 * var(--vh))}
+.rm .strand,.rm .scroll-hint i,.rm .cue i{animation:none}
+.rm .rv,.rm .rv-x,.rm .greeting p{opacity:1;transform:none;transition:none}
+.rm .print,.rm .l1,.rm .tv-note,.rm .print figcaption{transition:none}
+
+/* 장면 2 는 장면 1 의 마지막 화면 높이만큼 겹쳐 시작합니다(그림 → 실제 사진 사이에 넘어가는 빈 구간이 없도록). 동작 줄이기에서는 겹치지 않음 */
+html:not(.rm) #s2{margin-top:calc(-100 * var(--vh))}

@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<base href="../../v14/">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>김경원 ♥ 최규로 결혼합니다</title>
+<meta name="description" content="2027년 1월 23일 토요일 오후 6시, 웨스틴 조선 서울 1층 그랜드볼룸">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#f4f4f1">
+<!-- 링크 미리보기 (카카오톡·문자). 배포 주소가 바뀌면 og:url / og:image 도 같이 바꿔주세요 -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="김경원 ♥ 최규로 결혼합니다">
+<meta property="og:description" content="2027년 1월 23일 토요일 오후 6시 · 웨스틴 조선 서울 1층 그랜드볼룸">
+<meta property="og:url" content="https://kwkr-wedding.github.io/wedding/p/n/">
+<meta property="og:image" content="https://kwkr-wedding.github.io/wedding/v13/media/og.jpg?v=1">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23f4f4f1'/><text x='7' y='29' font-size='24' fill='%2323262a' font-family='serif'>01</text><text x='57' y='53' font-size='24' text-anchor='end' fill='%2323262a' font-family='serif'>23</text><line x1='40' y1='16' x2='24' y2='50' stroke='%2323262a' stroke-width='2' stroke-linecap='round' opacity='.8'/></svg>">
+<link rel="preload" as="image" href="../v12/media/intro-1.webp?v=1" fetchpriority="high">
+<link rel="preload" as="image" href="../v12/media/intro-2.webp?v=1">
+<link rel="preload" as="image" href="../v13/media/hero.webp?v=1">
+<link rel="stylesheet" href="../v4/fonts.css?v=202611200008">
+<link rel="stylesheet" href="../v13/bold.css?v=2">
+<link rel="stylesheet" href="style.css?v=202611270940">
+<!-- 처음 들어왔을 때 사진 세 장(V12 와 같음)이 지나간 뒤에 화면을 내릴 수 있습니다.
+     동작 줄이기 · 주소 끝에 #위치가 붙은 링크 · ?nointro · 새로 고침(보던 자리로 돌아감)에서는 바로 첫 화면이 보입니다. -->
+<script>(function(){try{var q=location.search;if(/[?&](still|nointro)\b/.test(q)||location.hash.length>1)return;var nv=performance.getEntriesByType&&performance.getEntriesByType("navigation")[0];if(nv&&nv.type==="reload"&&sessionStorage.getItem("pos:"+location.pathname+q))return;if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;document.documentElement.className="intro";setTimeout(function(){if(!window.__intro)document.documentElement.classList.remove("intro")},9000)}catch(e){}})()</script>
+</head>
+<body>
+<div id="clock" class="clock pre" aria-hidden="true"><svg class="ring" viewBox="0 0 24 24"><circle class="track" cx="12" cy="12" r="10.5"/><circle class="arc" cx="12" cy="12" r="10.5"/></svg><b></b></div>
+
+<main id="app">
+
+  <!-- 첫 화면 (V4~V9 와 같은 화면) -->
+  <section class="scene pinned" id="s0" style="--len:150">
+    <div class="pin">
+      <div class="hero-photo" id="heroPhoto">
+        <img src="../v13/media/hero.webp?v=1" alt="김경원, 최규로" fetchpriority="high" draggable="false" id="heroImg">
+      </div>
+      <div class="hero-text" id="heroText">
+        <p class="hero-sub en">THE WEDDING OF</p>
+        <h1 class="hero-names en"><i data-bind="openA"></i><span>&amp;</span><i data-bind="openB"></i></h1>
+        <p class="hero-date en" id="heroDate"></p>
+      </div>
+      <p class="scroll-hint" id="scrollHint">천천히 내려 주세요<i></i></p>
+      <div class="intro" id="intro" aria-hidden="true">
+        <div class="is is1"><img src="../v12/media/intro-1.webp?v=1" alt="" draggable="false"></div>
+        <div class="is is2"><img src="../v12/media/intro-2.webp?v=1" alt="" draggable="false"></div>
+        <div class="is-veil" id="isVeil"></div>
+        <div class="is-bar" id="isBar"><i></i><i></i><i></i></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 초대의 말: 화면 한 장 가운데에 놓입니다. 참석 의사 창이 떴다면 창을 닫은 뒤에 한 줄씩 나타납니다 -->
+  <section class="sec invite" id="invitation">
+    <span class="thread" aria-hidden="true"></span>
+    <div class="greeting" id="greeting"></div>
+  </section>
+
+  <!-- 신랑 · 신부 -->
+  <section class="sec couple" id="couple">
+    <div class="pair">
+      <figure class="who rv">
+        <div class="ph"><img src="../v13/media/groom.webp?v=2" alt="신랑 김경원" width="900" height="1200" loading="lazy" decoding="async" draggable="false"></div>
+        <figcaption>
+          <p class="par" id="parG"></p>
+          <p class="nm" aria-label="신랑 김경원"><small>신랑</small><b data-bind="groomName"></b></p>
+          <p class="tel" id="telG" hidden></p>
+        </figcaption>
+      </figure>
+      <figure class="who rv">
+        <div class="ph"><img src="../v13/media/bride.webp?v=1" alt="신부 최규로" width="900" height="1200" loading="lazy" decoding="async" draggable="false"></div>
+        <figcaption>
+          <p class="par" id="parB"></p>
+          <p class="nm" aria-label="신부 최규로"><small>신부</small><b data-bind="brideName"></b></p>
+          <p class="tel" id="telB" hidden></p>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 예식 일시 (제목 없이 날짜 · 달력 · 남은 날) -->
+  <section class="sec" id="date">
+    <span class="thread" aria-hidden="true"></span>
+    <div class="rv">
+      <p class="d-num en" id="dNum"></p>
+      <p class="d-when" id="dWhen"></p>
+    </div>
+    <div class="cal rv" id="calendar"></div>
+    <p class="dday rv" id="ddayText"></p>
+    <div class="split two rv">
+      <a id="gcalBtn" target="_blank" rel="noopener">구글 캘린더에 추가</a>
+      <button id="icsBtn">휴대폰 캘린더에 추가</button>
+    </div>
+  </section>
+
+  <!-- 사진 -->
+  <section class="sec bleed" id="gallery">
+    <span class="thread" aria-hidden="true"></span>
+    <h2 class="title rv">우리의 순간</h2>
+    <div class="grid rv" id="gGrid"></div>
+  </section>
+
+  <!-- 오시는 길 -->
+  <section class="sec" id="location">
+    <span class="thread" aria-hidden="true"></span>
+    <h2 class="title rv">오시는 길</h2>
+    <!-- 내용과 배치는 V13(기본 주소)의 오시는 길과 같습니다 -->
+    <p class="venue-en en rv"><span data-bind="venueEn"></span><br><span data-bind="hallEn"></span></p>
+    <div class="rv">
+      <p class="loc-name"><span data-bind="venueName"></span> <span data-bind="venueHall"></span></p>
+      <p class="loc-addr"><span data-bind="address"></span> <button class="link-btn" id="addrCopy">복사</button></p>
+      <p class="loc-tel"><a id="venueTel"></a></p>
+    </div>
+    <div class="map rv" id="map">
+      <div class="map-box" id="mapBox" role="img" aria-label="웨스틴 조선 서울 지도"></div>
+      <!-- 화면을 내리다 지도에 걸리지 않도록, 한 번 눌러야 지도가 움직입니다 -->
+      <button class="map-guard" id="mapGuard" aria-label="지도 움직이기"><span>눌러서 지도 움직이기</span></button>
+    </div>
+    <div class="nav-btns rv">
+      <a id="navNaver" target="_blank" rel="noopener"><i class="dot naver"></i>네이버지도</a>
+      <a id="navKakao" target="_blank" rel="noopener"><i class="dot kakao"></i>카카오맵</a>
+      <a id="navTmap"><i class="dot tmap"></i>티맵</a>
+    </div>
+    <div class="transport rv" id="transport"></div>
+  </section>
+
+  <!-- 마음 전하실 곳 -->
+  <section class="sec" id="accountsSec">
+    <span class="thread" aria-hidden="true"></span>
+    <h2 class="title rv">마음 전하실 곳</h2>
+    <p class="body rv" data-fit="11"><span class="ln">참석이 어려우신 분들을 위해 계좌번호를 기재하였습니다.</span><span class="ln">너그러운 마음으로 양해 부탁드립니다.</span></p>
+    <div class="accounts rv" id="accounts"></div>
+  </section>
+
+  <!-- 참석 의사 전달 -->
+  <section class="sec" id="rsvp">
+    <span class="thread" aria-hidden="true"></span>
+    <h2 class="title rv">참석 의사 전달</h2>
+    <div class="rv">
+      <p class="body pop-lead" data-fit="10"><span>저희 예식은 모든 하객분들을 위한 지정석으로 준비됩니다.</span><span>원활한 좌석 준비를 위해 번거로우시겠지만 참석 여부를 꼭 회신해 주시면 감사하겠습니다.</span></p>
+      <p class="meta" id="rsvpDeadline"></p>
+      <button class="btn solid wide" id="rsvpOpen">참석 의사 전달하기</button>
+      <p class="meta done" id="rsvpDone" hidden>이 휴대폰에서 회신을 보내셨습니다.<br>내용을 바꾸려면 같은 성함으로 다시 보내 주세요.</p>
+    </div>
+  </section>
+
+  <!-- 맺음: 공유 버튼만 -->
+  <section class="closing" id="closing">
+    <div class="share rv">
+      <button class="btn ghost" id="kakaoShare" hidden>카카오톡으로 보내기</button>
+      <button class="btn ghost" id="nativeShare" hidden>공유하기</button>
+      <button class="btn ghost" id="copyLink">링크 복사</button>
+    </div>
+  </section>
+</main>
+
+<!-- 바로가기 -->
+<nav class="quick" id="quick" aria-label="바로가기">
+  <a href="#date">일시</a>
+  <a href="#location">오시는 길</a>
+  <a href="#accountsSec">마음 전하실 곳</a>
+  <a href="#rsvp">참석 회신</a>
+</nav>
+
+<!-- 모달: RSVP -->
+<div class="modal" id="rsvpModal" hidden>
+  <div class="sheet">
+    <button class="close" data-close aria-label="닫기">&times;</button>
+    <h3 class="title sm">참석 의사 전달</h3>
+    <form id="rsvpForm" autocomplete="on">
+      <div class="field">
+        <span class="f-label">구분</span>
+        <div class="seg">
+          <input type="radio" name="side" id="sideG" value="신랑측" checked><label for="sideG">신랑측</label>
+          <input type="radio" name="side" id="sideB" value="신부측"><label for="sideB">신부측</label>
+        </div>
+      </div>
+      <div class="field">
+        <span class="f-label">참석 여부</span>
+        <div class="seg">
+          <input type="radio" name="attend" id="attY" value="참석" checked><label for="attY">참석</label>
+          <input type="radio" name="attend" id="attN" value="불참"><label for="attN">불참</label>
+        </div>
+      </div>
+      <!-- 식사 여부는 참석하시는 분께만 여쭙니다 (불참을 고르면 감춥니다) -->
+      <div class="field attend-only">
+        <span class="f-label">식사 여부</span>
+        <div class="seg">
+          <input type="radio" name="meal" id="mealY" value="예정" checked><label for="mealY">예정</label>
+          <input type="radio" name="meal" id="mealN" value="안 함"><label for="mealN">안 함</label>
+        </div>
+      </div>
+      <label class="field"><span class="f-label">성함</span>
+        <input name="name" required maxlength="20" placeholder="성함을 입력해주세요"></label>
+      <label class="field"><span class="f-label">연락처 <em>(선택)</em></span>
+        <input name="phone" type="tel" inputmode="tel" maxlength="20" placeholder="010-0000-0000"></label>
+      <label class="field"><span class="f-label">전하실 말씀 <em>(선택)</em></span>
+        <textarea name="note" rows="2" maxlength="200"></textarea></label>
+      <p class="form-note">이미 회신하셨어도 같은 성함·같은 구분(신랑 측/ 신부 측)으로 다시 보내시면 최신 내용으로 변경됩니다.</p>
+      <label class="agree"><input type="checkbox" required> 참석 여부 확인을 위한 개인정보 수집·이용에 동의합니다.</label>
+      <button class="btn solid wide" type="submit">전달하기</button>
+    </form>
+  </div>
+</div>
+
+<!-- 첫 화면이 거의 넘어갈 때 뜨는 참석 의사 안내 (config.js 의 v10.rsvpPopup · v14.rsvpPopup 이 true 일 때만) -->
+<div class="modal center" id="rsvpIntro" hidden>
+  <div class="sheet pop" role="dialog" aria-labelledby="rsvpIntroTitle">
+    <button class="close" data-close aria-label="닫기">&times;</button>
+    <h3 class="title sm" id="rsvpIntroTitle">참석 의사 전달</h3>
+    <p class="body-text pop-lead" data-fit="10"><span>저희 예식은 모든 하객분들을 위한 지정석으로 준비됩니다.</span><span>원활한 좌석 준비를 위해 번거로우시겠지만 참석 여부를 꼭 회신해 주시면 감사하겠습니다.</span></p>
+    <dl class="pop-info">
+      <div><dt>신랑 · 신부</dt><dd><span data-bind="groomName"></span> · <span data-bind="brideName"></span></dd></div>
+      <div><dt>일시</dt><dd id="popWhen"></dd></div>
+      <div><dt>장소</dt><dd><span data-bind="venueName"></span> <span data-bind="venueHall"></span></dd></div>
+    </dl>
+    <button class="btn solid wide" id="rsvpIntroGo">참석 의사 전달하기</button>
+    <button class="text-btn" id="rsvpIntroSkip">오늘 하루 보지 않기</button>
+  </div>
+</div>
+
+<!-- 사진 크게 보기: 좌우로 넘기고, 위나 아래로 밀면 닫힙니다 -->
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="사진 크게 보기" hidden>
+  <div class="lb-bg" id="lbBg"></div>
+  <div class="lb-track" id="lbTrack"></div>
+  <p class="lb-count en" id="lbCount"><span id="lbCur">1</span> / <span id="lbTotal"></span></p>
+  <button class="lb-close" id="lbClose" aria-label="닫기">&times;</button>
+  <button class="lb-arrow prev" id="lbPrev" aria-label="이전 사진"></button>
+  <button class="lb-arrow next" id="lbNext" aria-label="다음 사진"></button>
+</div>
+
+<!-- 첫 회신 창을 닫은 뒤 이어서 보기 안내 -->
+<div class="cue" id="cue" aria-live="polite"><small id="cueThanks" hidden>소중한 회신 감사합니다</small><span>이어서 화면을 내려주세요!</span><i></i></div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>window.NOACC = 1;</script>
+<script src="../config.js?v=202611270820"></script>
+<script src="../nmap.js?v=1"></script>
+<script src="app.js?v=202611270940"></script>
+</body>
+</html>

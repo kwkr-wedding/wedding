@@ -1,0 +1,375 @@
+/* ==========================================================
+ *  V14 · 클래식 (V10 을 바탕으로 V13 의 고친 내용을 옮겨 왔습니다)
+ *  첫 화면과 참석 의사 창은 V4~V9 와 같고, 그 뒤는 화면에 고정되는 장면 없이 위에서 아래로 읽는 일반 청첩장입니다.
+ *  바탕은 첫 화면의 스튜디오 흰 벽 한 가지(맺음만 밤색). 구분은 그림자 없이 가는 선으로만 합니다.
+ * ========================================================== */
+@font-face{font-family:"Cormorant Garamond";font-style:normal;font-weight:300;font-display:swap;src:url(../v4/fonts/cormorant-garamond-latin-300-normal.woff2) format("woff2")}
+@font-face{font-family:"Cormorant Garamond";font-style:italic;font-weight:300;font-display:swap;src:url(../v4/fonts/cormorant-garamond-latin-300-italic.woff2) format("woff2")}
+@font-face{font-family:"Cormorant Garamond";font-style:normal;font-weight:400;font-display:swap;src:url(../v4/fonts/cormorant-garamond-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Cormorant Garamond";font-style:italic;font-weight:400;font-display:swap;src:url(../v4/fonts/cormorant-garamond-latin-400-italic.woff2) format("woff2")}
+@font-face{font-family:"Cormorant Garamond";font-style:normal;font-weight:500;font-display:swap;src:url(../v4/fonts/cormorant-garamond-latin-500-normal.woff2) format("woff2")}
+
+:root{
+  --white:#f4f4f1;                 /* 스튜디오 벽 */
+  --ink:#23262a;                   /* 먹 */
+  --ink-2:rgba(35,38,42,.6);       /* 보조 글 */
+  --line:rgba(35,38,42,.14);       /* 가는 선 */
+  --night:#101613;                 /* 버튼 · 맺음 */
+  --paper:#f6f1e7;                 /* 참석 의사 창 */
+  --sun:#a9584c;                   /* 달력의 일요일 */
+  --sage-fill:#c3c4ae;             /* 그레이지 세이지 원래 색: 달력의 23 동그라미 · 맨 아래 참석 버튼처럼 면으로 칠하는 곳 */
+  --sage:#7f8166;                  /* 섹션 제목: 그레이지 세이지(Greige Sage, V13 의 #c3c4ae)를 밝은 바탕에서 읽히도록 짙게 */
+  --ko:"Gowun Batang","Nanum Myeongjo","Apple SD Gothic Neo",serif;
+  --en:"Cormorant Garamond","Gowun Batang",serif;
+  --ease:cubic-bezier(.2,.7,.2,1);
+  --vh:1vh; --quick:52px; --pad:28px; --gap:72px;
+}
+@supports(height:1svh){:root{--vh:1svh}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%;overflow-anchor:none}
+html,body{margin:0}
+body{font-family:var(--ko);color:var(--ink);background:var(--white);line-height:1.8;word-break:keep-all}
+body.locked{overflow:hidden}
+html.hold,html.hold body,html.intro,html.intro body{overflow:hidden}
+img{display:block;max-width:100%;-webkit-user-drag:none;user-select:none;-webkit-touch-callout:none}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+a{color:inherit}
+.en{font-family:var(--en);letter-spacing:.08em}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.lb :focus-visible{outline-color:#fff}
+
+/* 사진이 있는 칸에서는 두 손가락 확대·두 번 눌러 확대가 되지 않습니다 (스크롤만). 글씨는 확대할 수 있습니다 */
+.pin,.who .ph,.grid{touch-action:pan-x pan-y}
+
+/* ---------- 첫 화면 (V4~V9 와 같음) ---------- */
+.scene{position:relative}
+.scene.pinned{height:calc(var(--len) * var(--fvh,1vh))}   /* --fvh: app.js 가 처음 잰 1vh 값(px)으로 고정 */
+.pin{position:sticky;top:0;height:calc(100 * var(--vh));overflow:hidden}
+/* 사진 너비는 화면 높이의 9/16 까지만: 높이가 낮은 모니터에서 사진 위쪽(얼굴)이 잘려 올라가 글자에 가리지 않게 합니다. 휴대폰 · 큰 모니터는 그대로 */
+.hero-photo{position:absolute;left:0;right:0;margin:0 auto;width:min(100%,calc(56.25 * var(--vh)));top:calc(9 * var(--vh) + var(--hero-shift,0px));height:100%;transform-origin:50% 40%;will-change:transform;
+  -webkit-mask-image:linear-gradient(#0000,#000 16%);mask-image:linear-gradient(#0000,#000 16%)}
+/* 휴대폰(폭 600px 이하)은 사진을 화면 폭 가득: 카카오톡처럼 앱 안 브라우저는 보이는 높이가 낮아(위아래 막대) 높이 기준 폭(56.25vh)이 화면보다 좁아져 좌우에 빈 띠가 생겼음 */
+@media (max-width:600px){.hero-photo{width:100%}}
+/* 사진 아래쪽 끝도 벽 색으로 풀립니다 (첫 화면에서는 바로가기 뒤라 보이지 않고, 다음 화면으로 넘어갈 때 사진 끝이 잘린 선으로 보이지 않게) */
+.pin::after{content:"";position:absolute;left:0;right:0;bottom:0;height:calc(9 * var(--vh));background:linear-gradient(rgba(244,244,241,0),var(--white) 92%);pointer-events:none}
+.hero-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 100%}
+.hero-text{position:absolute;left:0;right:0;top:calc(9.5 * var(--vh));text-align:center;will-change:transform,opacity}
+.hero-sub{margin:0;font-size:11px;letter-spacing:.42em;opacity:.65}
+/* 이름은 휴대폰에서도 한 줄로 */
+.hero-names{margin:8px 0 6px;font-weight:300;font-size:clamp(27px,9.6vw,46px);line-height:1.12;letter-spacing:.01em;display:flex;flex-direction:row;justify-content:center;align-items:baseline;gap:.24em;white-space:nowrap}
+.hero-names i{font-style:italic}
+.hero-names span{font-size:.62em;font-style:italic;opacity:.7}
+.hero-date{margin:10px 0 0;font-size:13px;letter-spacing:.3em;font-variant-numeric:lining-nums}   /* 27.01.23 의 숫자 높이를 SATURDAY, 6PM 과 같게 */
+.hero-venue{display:block;margin-top:7px;font-size:10px;letter-spacing:.18em;opacity:.85}
+.scroll-hint{position:absolute;z-index:1;left:50%;transform:translateX(-50%);bottom:calc(18px + var(--quick) + env(safe-area-inset-bottom));margin:0;padding:7px 16px 4px;border-radius:999px;text-align:center;font-size:12.5px;letter-spacing:.14em;color:var(--ink);background:rgba(244,244,241,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.scroll-hint i{display:block;width:1px;height:14px;margin:4px auto 0;background:var(--ink);animation:hint 1.8s ease-in-out infinite;transform-origin:50% 0}
+@keyframes hint{0%{transform:scaleY(0)}55%{transform:scaleY(1)}100%{transform:scaleY(1);opacity:0}}
+
+/* ---------- 본문 공통 ---------- */
+.sec{position:relative;max-width:520px;margin:0 auto;padding:0 var(--pad) var(--gap);text-align:center}
+.sec.bleed{padding-left:0;padding-right:0}
+/* 이어 주는 선: 첫 화면 안내 문구 아래의 세로선이 섹션마다 다시 그어집니다 */
+.thread{display:block;width:1px;height:44px;margin:0 auto 26px;background:var(--ink);opacity:.3;transform:scaleY(0);transform-origin:50% 0;transition:transform 1.3s var(--ease)}
+.thread.in{transform:scaleY(1)}
+.h{margin:0 0 38px;font-weight:400;font-size:20px;line-height:1.5;letter-spacing:.14em;text-indent:.14em}
+.body{margin:0 0 30px;font-size:15px;line-height:2;letter-spacing:.02em;text-wrap:balance}
+.meta{margin:0;font-size:13px;line-height:1.8;color:var(--ink-2)}
+.bal{text-wrap:balance}
+
+.rv{opacity:0;transform:translateY(14px);transition:opacity .8s ease,transform .9s var(--ease)}
+.rv.in{opacity:1;transform:none}
+.h.rv{transition-delay:.22s}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:48px;padding:0 20px;border-radius:999px;font-size:14.5px;letter-spacing:.02em;text-decoration:none;
+  transition:transform .25s var(--ease),opacity .2s}
+.btn:active{transform:scale(.97)}
+.btn.line{border:1px solid rgba(35,38,42,.28)}
+.btn.solid{background:var(--night);color:var(--paper)}
+.btn.ghost{border:1px solid rgba(246,241,231,.36);color:var(--paper)}
+.btn.wide{width:100%}
+.btn[disabled]{opacity:.5}
+/* 나란히 놓인 선택지: 가는 테두리 안에서 세로선으로 나뉩니다 (캘린더에 추가, 길찾기) */
+.split{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:2px}
+.split.two{grid-template-columns:1fr 1fr}
+.split>*{display:flex;align-items:center;justify-content:center;gap:7px;min-height:50px;font-size:13.5px;letter-spacing:.01em;text-decoration:none;transition:background-color .2s ease}
+.split>*+*{border-left:1px solid var(--line)}
+.split>*:active{background:rgba(35,38,42,.06)}
+
+/* ---------- 초대의 말 ---------- */
+/* 인사말은 네 줄 모두 같은 크기 · 같은 줄 간격, 한 문장이 한 줄 (app.js 의 fitGroups 가 가장 긴 줄에 맞춰 크기를 정합니다) */
+.invite{padding-top:44px;padding-bottom:52px}
+.ln{display:block;white-space:nowrap}
+.invite .thread{height:72px;margin-bottom:46px}
+.greeting>*{opacity:0;transform:translateY(16px);transition:opacity 1.2s ease,transform 1.3s var(--ease)}
+.greeting>.in{opacity:1;transform:none}
+.greeting{font-size:15.5px}
+.greeting p{margin:0;font-size:inherit;line-height:2.4;letter-spacing:.03em;white-space:nowrap}
+
+/* ---------- 신랑 · 신부 ---------- */
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.who{margin:0}
+.who+.who{transition-delay:.14s}
+.who .ph{aspect-ratio:3/4;overflow:hidden;border-radius:2px;background:#dcdfde}
+.who .ph img{width:100%;height:100%;object-fit:cover;transform:scale(1.18);transform-origin:46% 24%}   /* 얼굴 쪽으로 조금 확대 */
+.who+.who .ph img{transform-origin:56% 24%}
+.who .par{margin:18px 0 0;font-size:13px;line-height:1.7;color:var(--ink-2);letter-spacing:.02em}
+.who .nm{margin:2px 0 0;font-size:19px;letter-spacing:.22em}
+.who .nm small{font-size:12px;letter-spacing:.06em;color:var(--ink-2);margin-right:.8em}
+.who .nm b{font-weight:400;margin-right:-.22em}
+.who .tel{margin:10px 0 0;display:flex;gap:6px;justify-content:center}
+
+/* ---------- 예식 일시 ---------- */
+/* 달력 위 날짜 · 요일: 크기와 배치는 V13 과 같습니다 */
+.d-num{margin:0;font-size:30px;line-height:1.8;letter-spacing:.14em;text-indent:.14em;font-variant-numeric:lining-nums}
+.d-when{margin:2px 0 20px;font-size:14.5px;opacity:.86}
+.cal{max-width:336px;margin:0 auto;padding:24px 0 20px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.cal .grid7{display:grid;grid-template-columns:repeat(7,1fr);row-gap:5px;font-family:var(--en);font-size:18px;font-variant-numeric:lining-nums}
+.cal .dow{font-family:var(--ko);font-size:12px;color:var(--ink-2);padding-bottom:10px}
+.cal .d{height:38px;display:flex;align-items:center;justify-content:center;color:rgba(35,38,42,.8)}
+.cal .sun{color:var(--sun)}
+/* 오른쪽 위 D-day (기본 주소의 V13 과 같은 표시): 'D-58' 과 1/(남은 날 수)만큼 채워진 작은 원. 첫 화면에서는 감춥니다.
+   밝은 바탕이라 지나가는 글자와 겹쳐 보이지 않도록 옅은 바탕을 깔았습니다 */
+.clock{position:fixed;z-index:20;top:calc(10px + env(safe-area-inset-top));right:10px;padding:4px 9px 4px 8px;border-radius:999px;background:rgba(244,244,241,.78);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);font-family:var(--en);display:flex;align-items:center;gap:5px;color:var(--ink);pointer-events:none;transition:opacity .5s ease}
+.clock b{font-weight:400;font-size:16.5px;font-variant-numeric:lining-nums tabular-nums;letter-spacing:.08em}
+.clock .ring{flex:none;width:11px;height:11px;overflow:visible;transform:rotate(-90deg)}
+.clock .ring circle{fill:none;stroke:currentColor;stroke-width:2.4}
+.clock .ring .track{opacity:.2}
+.clock .ring .arc{stroke-dasharray:65.97;stroke-dashoffset:65.97;opacity:.85}
+.clock.pre,html.intro .clock{opacity:0}
+/* 달력의 예식일(23)은 굵게: Cormorant Garamond 700 */
+@font-face{font-family:"Cormorant Garamond";font-style:normal;font-weight:700;font-display:swap;src:url(../v4/fonts/cormorant-garamond-latin-700-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+.cal .day{position:relative;z-index:0;color:var(--ink);font-weight:700;transition:color .4s ease .55s}
+.cal .day::before{content:"";position:absolute;z-index:-1;left:50%;top:50%;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;background:var(--sage-fill);box-shadow:0 0 0 4px rgba(195,196,174,.3);
+  transition:transform .7s var(--ease) .5s,opacity .4s ease .5s}
+/* 달력이 보이면 예식 날에 동그라미가 놓입니다 */
+.cal.rv:not(.in) .day{color:rgba(35,38,42,.8)}
+.cal.rv:not(.in) .day::before{transform:scale(.3);opacity:0}
+.dday{margin:30px 0 0;font-size:15px;letter-spacing:.02em}
+.dday b{font-weight:700;color:var(--sage)}
+#date .split{margin-top:30px}
+.fit1{display:inline-block;white-space:nowrap}
+
+/* ---------- 사진 ---------- */
+/* 한 줄 = 24칸(작은 사진 8칸 = 한 줄에 세 장). 큰 사진(.gb)은 16칸 × 두 줄이고 옆에 작은 사진 두 장이 위아래로 붙습니다.
+   반쪽(.gh) 12칸, 가로 사진 .s2 16칸 · .s3 24칸. 신랑 · 신부 짝(.gpL · .gpR)은 13 : 11 — 신부 사진은 위쪽 벽을 늘린 그림(22x)이라 얼굴 크기가 비슷해집니다 */
+.grid{display:grid;grid-template-columns:repeat(24,minmax(0,1fr));gap:2px}
+.g{position:relative;display:block;aspect-ratio:2/3;overflow:hidden;background:var(--c,#d9dbd9)}
+.g{grid-column:span 8}
+.g.gh{grid-column:span 12}
+.g.gb{grid-column:span 16;grid-row:span 2;aspect-ratio:auto}
+.g.gpL{grid-column:span 13}
+.g.gpR{grid-column:span 11;aspect-ratio:auto}
+.g.gpR img{object-position:50% 100%}
+.g.gf{aspect-ratio:auto}   /* 옆 사진 높이에 맞춰 채우는 사진 */
+.g.s3{grid-column:span 24;aspect-ratio:3/2}
+.g.s2{grid-column:span 16;aspect-ratio:auto}
+.g img{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover;opacity:0;transition:opacity .6s ease,transform .5s var(--ease)}
+.g img.ok{opacity:1}
+.g:active img{transform:scale(.97)}
+.g.hide{background:none}
+.g.hide img{visibility:hidden}
+
+/* ---------- 오시는 길 ---------- */
+/* V13 의 오시는 길과 같은 내용 · 배치 (색만 밝은 바탕에 맞춤) */
+.venue-en{margin:-8px 0 20px;font-size:13px;letter-spacing:.26em;text-indent:.26em;line-height:1.9;opacity:.75;font-variant-numeric:lining-nums}
+.loc-name{margin:0;font-size:18px}
+.loc-addr{margin:2px 0 0;font-size:14.5px;opacity:.9}
+.link-btn{margin-left:6px;font-size:12.5px;padding:3px 10px;border:1px solid rgba(35,38,42,.3);border-radius:999px}
+.loc-tel{margin:2px 0 18px;font-size:14px}
+.loc-tel a{text-decoration:none;opacity:.7}
+.nav-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 22px}
+.nav-btns a{display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px;border:1px solid rgba(35,38,42,.26);border-radius:999px;font-size:13.5px;text-decoration:none}
+.chip{position:relative;display:inline-flex;align-items:center;min-height:36px;padding:0 15px;border:1px solid rgba(35,38,42,.24);border-radius:999px;font-size:13px;text-decoration:none;transition:transform .25s var(--ease)}
+.chip::after{content:"";position:absolute;inset:-5px -2px}
+.chip:active{transform:scale(.96)}
+.map{position:relative;height:250px;overflow:hidden;border-radius:4px;background:#e3e4e1}
+.map iframe{display:block;width:100%;height:100%;border:0}
+.nv-pin{position:relative;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;pointer-events:none}
+.nv-pin span{padding:6px 12px;border-radius:999px;background:#262829;color:#f4f4f1;font:13px/1.2 "Gowun Batang",serif;letter-spacing:.02em;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.25)}
+.nv-pin i{width:0;height:0;border:7px solid transparent;border-top-color:#262829;border-bottom:0;margin-top:-1px}
+.map-box{width:100%;height:100%}
+.map-guard{position:absolute;inset:0;z-index:2;display:flex;align-items:flex-end;justify-content:center;padding-bottom:30px}
+.map-guard span{padding:5px 14px;border-radius:999px;font-size:12.5px;letter-spacing:.02em;background:rgba(244,244,241,.92);box-shadow:0 1px 8px rgba(0,0,0,.14)}
+.map.live .map-guard{display:none}
+.dot{width:9px;height:9px;border-radius:50%}
+.dot.naver{background:#03c75a}.dot.kakao{background:#fae100}.dot.tmap{background:#e6002d}
+.transport{text-align:left;border-bottom:1px solid var(--line)}
+.transport .t{padding:14px 2px;border-top:1px solid var(--line)}
+.transport h4{margin:0 0 4px;font-size:14.5px;font-weight:700;color:var(--sage)}
+.transport ul{margin:0;padding:0;list-style:none;font-size:14px;line-height:1.75;opacity:.92}
+
+/* ---------- 마음 전하실 곳 ---------- */
+.accounts{text-align:left;border-bottom:1px solid var(--line)}
+.acc-group{border-top:1px solid var(--line)}
+.acc-head{width:100%;display:flex;justify-content:space-between;align-items:center;min-height:58px;font-size:15.5px;letter-spacing:.04em;text-align:left}
+.acc-head::after{content:"";width:8px;height:8px;margin:-4px 5px 0 0;border-right:1px solid;border-bottom:1px solid;transform:rotate(45deg);transition:transform .45s var(--ease)}
+.acc-group.open .acc-head::after{transform:translateY(4px) rotate(-135deg)}
+.acc-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .5s var(--ease)}
+.acc-group.open .acc-body{grid-template-rows:1fr}
+.acc-in{min-height:0;overflow:hidden;visibility:hidden;transition:visibility 0s .5s}
+.acc-group.open .acc-in{visibility:visible;transition-delay:0s}
+.acc-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:2px 0 18px;opacity:0;transition:opacity .25s ease}
+.acc-group.open .acc-row{opacity:1;transition:opacity .5s ease .14s}
+.acc-row small{display:block;font-size:12.5px;color:var(--ink-2)}
+.acc-row .num{font-size:14.5px}
+.acc-row .num b{font-weight:400;font-family:var(--en);font-size:18px;letter-spacing:.04em;font-variant-numeric:lining-nums}
+.acc-row .acts{flex:none;display:flex;gap:6px}
+.mini{min-width:66px;min-height:40px;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(35,38,42,.28);border-radius:999px;font-size:13px;text-decoration:none;
+  transition:background-color .25s ease,color .25s ease,border-color .25s ease,transform .25s var(--ease)}
+.mini:active{transform:scale(.95)}
+.mini.done{background:var(--night);color:var(--paper);border-color:var(--night)}
+
+/* ---------- 참석 의사 전달 ---------- */
+#rsvp .body{margin-bottom:14px}
+#rsvp .meta{margin-bottom:28px}
+#rsvp .meta.done{margin:18px 0 0}
+#rsvpOpen{background:var(--sage-fill);color:var(--ink)}   /* 맨 아래 참석 버튼은 그레이지 세이지 */
+
+/* ---------- 맺음 ---------- */
+/* 큰 화면에서도 어두운 바탕이 좌우 끝까지 이어집니다 */
+.closing{text-align:center;padding-bottom:calc(var(--quick) + 44px + env(safe-area-inset-bottom))}
+.closing .btn.ghost{border-color:rgba(35,38,42,.28);color:var(--ink)}
+.share{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:0 var(--pad)}
+
+/* ---------- 바로가기 ---------- */
+.quick{position:fixed;z-index:30;left:0;right:0;bottom:0;height:calc(var(--quick) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);
+  display:grid;grid-template-columns:repeat(4,auto);justify-content:space-evenly;align-items:center;
+  background:rgba(244,244,241,.82);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid rgba(35,38,42,.1);transition:background-color .45s ease,border-color .45s ease}
+.quick a{position:relative;display:flex;align-items:center;height:var(--quick);padding:0 6px;font-size:14px;text-decoration:none;color:var(--ink);letter-spacing:.02em;white-space:nowrap;transition:color .45s ease}
+/* 지금 보고 있는 섹션에는 가는 밑줄이 그어집니다 */
+.quick a::after{content:"";position:absolute;left:6px;right:6px;bottom:11px;height:1px;background:currentColor;transform:scaleX(0);transition:transform .45s var(--ease)}
+.quick a.on::after{transform:scaleX(1)}
+body.dark .quick{background:rgba(16,22,19,.78);border-top-color:rgba(246,241,231,.12)}
+body.dark .quick a{color:var(--paper)}
+
+/* ---------- 모달 · 폼 (V4~V9 와 같음) ---------- */
+.label{margin:0 0 10px;font-size:12px;letter-spacing:.32em;opacity:.55}
+.title{margin:0 0 26px;font-weight:400;font-size:22px;letter-spacing:.04em}
+.sec .title{color:var(--sage);font-weight:700}
+.pop-note{margin:-6px -10px 18px;font-size:13px;line-height:1.75;opacity:.8;text-align:center}
+.title.sm{font-size:19px;margin-bottom:18px}
+.body-text{margin:0 0 14px;font-size:15px}
+/* 지정석 안내(처음 뜨는 안내 창 + 맨 아래 '참석 의사 전달' 섹션): V13 과 같은 규칙.
+   문장마다 줄을 바꾸고 줄 길이를 고르게 나눕니다. 휴대폰의 안내 창에서는 첫 문장이 한 줄에 들어가게 좌우를 10px 씩 넓히고 글자를 화면 너비에 맞춥니다(12px 아래로는 줄이지 않아 아주 좁은 화면에서는 다음 줄로 넘어감).
+   PC 처럼 넓은 화면에서는 문장마다 한 줄(13px, 넘치면 app.js 의 fitGroups 가 더 줄임)이고 안내 창도 그만큼 넓힙니다 */
+.pop-lead{font-size:14.5px;line-height:1.75}
+.pop-lead span{display:block;text-wrap:balance}
+.pop-lead span+span{margin-top:6px}
+.sheet.pop .pop-lead{margin-left:-10px;margin-right:-10px;font-size:clamp(12px,calc((100vw - 64px) / 24.6),14.5px)}
+/* 맨 아래 '참석 의사 전달' 섹션(휴대폰)도 첫 문장이 한 줄에 들어가게: 좌우를 10px 씩 넓히고 글자를 화면 너비에 맞춤(12px 아래로는 줄이지 않음) */
+#rsvp .pop-lead{margin-left:-10px;margin-right:-10px;font-size:clamp(12px,calc((100vw - 36px) / 24.6),14.5px)}
+@media (min-width:700px){
+  .pop-lead,.sheet.pop .pop-lead,#rsvp .pop-lead{font-size:13px;margin-left:0;margin-right:0}
+  .pop-lead span{text-wrap:nowrap;white-space:nowrap}
+  #rsvpIntro .sheet{max-width:580px}
+}
+.modal{position:fixed;inset:0;z-index:50;overscroll-behavior:contain;background:rgba(10,14,12,.6);display:flex;align-items:flex-end;justify-content:center;animation:fade .3s ease}
+.modal.center{align-items:center;padding:20px}
+.sheet{position:relative;overscroll-behavior:contain;width:100%;max-width:520px;max-height:calc(92 * var(--vh));overflow:auto;background:var(--paper);color:var(--ink);border-radius:22px 22px 0 0;
+  padding:30px 22px calc(26px + env(safe-area-inset-bottom));text-align:center;animation:up .4s var(--ease)}
+.sheet.pop{border-radius:22px;padding-bottom:22px}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+@keyframes fade{from{opacity:0}}
+/* 닫힐 때는 살짝 내려가며 사라집니다 */
+.modal.out{opacity:0;transition:opacity .22s ease;pointer-events:none}
+.modal.out .sheet{transform:translateY(24px);transition:transform .22s ease-in}
+.close{position:absolute;z-index:2;top:8px;right:10px;width:44px;height:44px;font-size:28px;line-height:1;opacity:.6}
+form{text-align:left}
+.field{display:block;margin-bottom:16px}
+.f-label{display:block;font-size:13.5px;margin-bottom:6px;opacity:.75}
+.f-label em{font-style:normal;opacity:.6}
+.field input:not([type=radio]),.field textarea{width:100%;font:inherit;font-size:16px;padding:12px 14px;border:1px solid rgba(35,38,42,.25);border-radius:12px;background:#fff;color:var(--ink);transition:border-color .2s ease}
+.field input:not([type=radio]):focus,.field textarea:focus{outline:0;border-color:var(--ink)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{display:flex;align-items:center;justify-content:center;min-height:46px;border:1px solid rgba(35,38,42,.25);border-radius:12px;font-size:15px;background:#fff;transition:background-color .2s ease,color .2s ease,border-color .2s ease}
+.seg input:checked+label{background:var(--night);color:var(--paper);border-color:var(--night)}
+.seg input:focus-visible+label{outline:2px solid var(--ink);outline-offset:2px}
+form.absent .attend-only{display:none}
+.form-note{font-size:12.5px;opacity:.65;margin:0 0 12px}
+.agree{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;margin-bottom:16px}
+.agree input{margin-top:5px;width:18px;height:18px;accent-color:var(--night)}
+.pop-info{margin:18px 0;padding:14px;border-radius:12px;background:#fff;text-align:left;font-size:14.5px}
+.pop-info div{display:flex;gap:12px;padding:3px 0}
+.pop-info dt{flex:none;width:76px;opacity:.6}
+.pop-info dd{margin:0}
+.text-btn{margin-top:12px;font-size:13.5px;opacity:.65;text-decoration:underline;min-height:44px}
+
+/* ---------- 사진 크게 보기 ---------- */
+.lb{position:fixed;inset:0;z-index:60;touch-action:none;overscroll-behavior:contain;color:#fff}
+.lb-bg{position:absolute;inset:0;background:#0a0d0b;opacity:0;transition:opacity .35s ease}
+.lb.show .lb-bg{opacity:1}
+.lb-track{position:absolute;inset:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;touch-action:pan-x;overscroll-behavior:contain}
+.lb-track::-webkit-scrollbar{display:none}
+.lb-slide{flex:0 0 100%;height:100%;scroll-snap-align:center;scroll-snap-stop:always;padding:calc(58px + env(safe-area-inset-top)) 0 calc(62px + env(safe-area-inset-bottom))}
+.lb-slide img{width:100%;height:100%;max-width:none;object-fit:contain;background:center/contain no-repeat;will-change:transform}
+.lb-count,.lb-close,.lb-arrow{opacity:0;transition:opacity .3s ease}
+.lb.show .lb-count{opacity:.8}
+.lb.show .lb-close{opacity:.85}
+.lb.show.drag .lb-count,.lb.show.drag .lb-close{opacity:0}
+.lb-count{position:absolute;left:0;right:0;bottom:calc(20px + env(safe-area-inset-bottom));margin:0;text-align:center;font-size:15px;letter-spacing:.22em;text-indent:.22em;pointer-events:none;font-variant-numeric:lining-nums}
+.lb-close{position:absolute;top:calc(6px + env(safe-area-inset-top));right:8px;width:48px;height:48px;font-size:30px;line-height:1}
+.lb-arrow{display:none;position:absolute;top:50%;width:52px;height:52px;margin-top:-26px}
+.lb-arrow::before{content:"";position:absolute;left:50%;top:50%;width:12px;height:12px;margin:-6px 0 0 -3px;border-left:1px solid #fff;border-bottom:1px solid #fff;transform:rotate(45deg)}
+.lb-arrow.prev{left:10px}
+.lb-arrow.next{right:10px;transform:scaleX(-1)}
+@media(hover:hover) and (pointer:fine){.lb-arrow{display:block}.lb.show .lb-arrow{opacity:.75}.lb.show .lb-arrow[disabled]{opacity:.2}}
+
+/* 회신 창을 닫은 뒤 "이어서 화면을 내려주세요!" — 누를 필요 없이 잠깐 떠 있다 사라집니다 */
+.cue{position:fixed;z-index:45;left:50%;bottom:calc(var(--quick) + 30px + env(safe-area-inset-bottom));transform:translate(-50%,14px);display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:10px 20px 6px;border-radius:22px;text-align:center;font-size:14px;letter-spacing:.06em;color:var(--ink);background:rgba(244,244,241,.86);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  box-shadow:0 8px 24px rgba(0,0,0,.08);opacity:0;pointer-events:none;transition:opacity .5s ease,transform .5s ease;white-space:nowrap}
+.cue small{font-size:12px;opacity:.7;letter-spacing:.04em}
+.cue i{display:block;width:1px;height:14px;margin:4px auto 0;background:var(--ink);animation:hint 1.8s ease-in-out infinite;transform-origin:50% 0}
+.cue.show{opacity:1;transform:translate(-50%,0)}
+.toast{position:fixed;z-index:70;left:50%;bottom:calc(var(--quick) + 26px + env(safe-area-inset-bottom));transform:translate(-50%,16px);background:rgba(20,24,22,.92);color:#fff;
+  padding:10px 18px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .3s ease,transform .4s var(--ease);white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* 좁은 화면 */
+@media(max-width:350px){
+  :root{--pad:22px}
+  .body{font-size:14.5px}
+  .who .nm{letter-spacing:.14em}.who .nm b{margin-right:-.14em}
+}
+/* 큰 화면에서는 휴대폰 너비로 가운데 정렬 */
+@media(min-width:700px){
+  #app{max-width:520px;margin:0 auto}
+}
+
+/* ---------- 처음 들어왔을 때: 사진 세 장 (V12 와 같음) ----------
+   ① 소파에 앉은 사진이 천천히 물러나고 → ② 마주 보는 사진이 두 사람 쪽으로 다가가다 빛에 잠기고 → ③ 첫 화면 사진이 빛 속에서 자리를 잡습니다 */
+.intro{position:absolute;inset:0;z-index:3;overflow:hidden;background:var(--white);transition:opacity 1.1s ease}
+html:not(.intro) .intro{display:none}
+.is{position:absolute;inset:0;opacity:0;transition:opacity .9s ease;will-change:opacity}
+.is img{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover;will-change:transform}
+.is1 img{object-position:50% 40%;transform:scale(1.1)}
+.is2 img{object-position:50% 100%;transform-origin:50% 63%}
+.is.on{opacity:1}
+.is1.on img{animation:isDrift 3.4s cubic-bezier(.25,.6,.3,1) both}
+.is2.on img{animation:isZoom 3.1s cubic-bezier(.45,0,.25,1) both}
+@keyframes isDrift{from{transform:scale(1.1)}to{transform:scale(1.01)}}
+@keyframes isZoom{from{transform:scale(1)}to{transform:scale(1.22)}}
+.is-veil{position:absolute;inset:0;background:#fbfbf9;opacity:0;transition:opacity .6s ease}
+.is-veil.on{opacity:1}
+.intro.out{opacity:0}
+html.intro3 .hero-photo img{animation:isSettle 2.1s cubic-bezier(.2,.7,.2,1) both}
+@keyframes isSettle{from{transform:scale(1.09)}to{transform:scale(1)}}
+.is-bar{position:absolute;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;gap:5px;padding:7px 9px;border-radius:999px;background:rgba(244,244,241,.5);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:opacity .5s ease}
+.is-bar i{position:relative;width:20px;height:2px;border-radius:2px;background:rgba(35,38,42,.2);overflow:hidden}
+.is-bar i::after{content:"";position:absolute;inset:0;background:var(--ink);transform:scaleX(0);transform-origin:0 50%}
+.is-bar i.go::after{transform:scaleX(1);transition:transform var(--d,2s) linear}
+.intro.out .is-bar{opacity:0}
+html.intro .hero-text,html.intro .scroll-hint{opacity:0!important}
+html.intro .quick{transform:translateY(105%)}
+.quick{transition:background-color .45s ease,border-color .45s ease,transform .6s var(--ease)}
+html.reveal .hero-text{transition:opacity 1.3s ease .15s}
+html.reveal .scroll-hint{transition:opacity 1s ease .9s}
+
+/* 동작 줄이기: 움직임을 끄고 내용만 보여 줍니다 (app.js 가 html 에 rm 을 붙입니다) */
+.rm .scene.pinned{height:calc(100 * var(--fsvh,var(--vh)))}
+.rm .scroll-hint i,.rm .cue i{animation:none}
+.rm .rv,.rm .greeting>*{opacity:1;transform:none;transition:none}
+.rm .thread{transform:none;transition:none}
+.rm .cal .day,.rm .cal .day::before,.rm .acc-body,.rm .acc-row,.rm .btn,.rm .g img,.rm .modal,.rm .sheet,.rm .lb-bg{transition:none;animation:none}
